@@ -29,11 +29,14 @@ clipseypone@gmail.com
 */
 package angelscript
 
-// #cgo CXXFLAGS: -Wall -fPIC -fno-strict-aliasing -std=c++11
-// #include <stddef.h>
-// #include "angelscript_c.h"
+/*
+#cgo CXXFLAGS: -Wall -fPIC -fno-strict-aliasing -std=c++11
+#include <stddef.h>
+#include <stdlib.h>
+#include "angelscript_c.h"
+*/
 import "C"
-
+import "unsafe"
 import "github.com/Member1221/go-angelscript/flags"
 
 const ASAngelScriptVersion = 23102
@@ -48,6 +51,28 @@ type ASQWORD = C.asQWORD
 type ASInt64 = C.asINT64
 type ASBool = C.asBOOL
 
+func GetLibraryVersion() string {
+	return C.GoString(C.asGetLibraryOptions())
+}
+
+func GetLibraryOptions() string {
+	return C.GoString(C.asGetLibraryOptions())
+}
+
+//Current function being wrapped.
+var wrapFuncs map[string]wrapableFunction
+
+type wrapableFunction struct {
+	fun func(...interface{})
+	args ...interface{}
+}
+
+func (w *wrapableFunction) doUnwrap() {
+	w.fun(w.args...)
+}
+
+
+// ScriptEngine is an angelscript engine/context.
 type ScriptEngine struct {
 	engine *C.struct_asIScriptEngine
 }
@@ -64,11 +89,22 @@ func CreateScriptEngineVersion(version int32) *ScriptEngine {
 	}
 }
 
-func (engine *ScriptEngine) ShutDownAndRelease() int32 {
-	return 0 //return int32(C.asEngine_ShutDownAndRelease(engine.engine))
+//export function_wrapper
+func function_wrapper(f func(vars []interface{}), input C.int) {
+	wrapping_function.doUnwrap()
 }
 
-func (engine *ScriptEngine) WriteMessage(section string, int row, int collumn, typ flags.ASMessageType, message string) {
+func RegisterGlobalFunction(declaration string, function func(...interface{}), args ...interface{}, callingConvention flags.ASCallConvention) {
+	cdeclaration := C.CString(declaration)
+	defer C.free(unsafe.Pointer(cdeclaration))
+	wrappingFunction = wrapableFunction{
+		fun: func,
+		args: args,
+	}
+}
+
+
+func (engine *ScriptEngine) WriteMessage(section string, row, collumn int, typ flags.ASMessageType, message string) {
 	// TODO: Implement this
 	//C.asEngine_WriteMessage()
 }
