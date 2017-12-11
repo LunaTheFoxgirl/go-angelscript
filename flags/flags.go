@@ -219,36 +219,38 @@ const (
 )
 
 //Token classes
+type ASTokenClass = uint32
 const (
-	ASTokenUnknown = iota
+	ASTokenUnknown = ASTokenClass(iota)
 	ASTokenKeyword
 	ASTokenValue
-	ASTokenIdentifier
+	ASTokenTypeentifier
 	ASTokenComment
 	ASTokenWhitespace
 )
 
 //Type id flags
+type ASTokenType = uint32
 const (
-	ASTypeIdVoid               = 0
-	ASTypeIdBool               = 1
-	ASTypeIdInt8               = 2
-	ASTypeIdInt16              = 3
-	ASTypeIdInt32              = 4
-	ASTypeIdInt64              = 5
-	ASTypeIdUInt8              = 6
-	ASTypeIdUInt16             = 7
-	ASTypeIdUInt32             = 8
-	ASTypeIdUInt64             = 9
-	ASTypeIdFloat              = 10
-	ASTypeIdDouble             = 11
-	ASTypeIdObjectHandle       = 0x40000000
-	ASTypeIdHandleToConst      = 0x20000000
-	ASTypeIdMaskObject         = 0x1C000000
-	ASTypeIdAppObject          = 0x04000000
-	ASTypeIdScriptObject       = 0x08000000
-	ASTypeIdTemplate           = 0x10000000
-	ASTypeIdMaskSequenceNumber = 0x03FFFFFF
+	ASTypeIdVoid               = ASTokenType(0)
+	ASTypeIdBool               = ASTokenType(1)
+	ASTypeIdInt8               = ASTokenType(2)
+	ASTypeIdInt16              = ASTokenType(3)
+	ASTypeIdInt32              = ASTokenType(4)
+	ASTypeIdInt64              = ASTokenType(5)
+	ASTypeIdUInt8              = ASTokenType(6)
+	ASTypeIdUInt16             = ASTokenType(7)
+	ASTypeIdUInt32             = ASTokenType(8)
+	ASTypeIdUInt64             = ASTokenType(9)
+	ASTypeIdFloat              = ASTokenType(10)
+	ASTypeIdDouble             = ASTokenType(11)
+	ASTypeIdObjectHandle       = ASTokenType(0x40000000)
+	ASTypeIdHandleToConst      = ASTokenType(0x20000000)
+	ASTypeIdMaskObject         = ASTokenType(0x1C000000)
+	ASTypeIdAppObject          = ASTokenType(0x04000000)
+	ASTypeIdScriptObject       = ASTokenType(0x08000000)
+	ASTypeIdTemplate           = ASTokenType(0x10000000)
+	ASTypeIdMaskSequenceNumber = ASTokenType(0x03FFFFFF)
 )
 
 // Type modifiers
