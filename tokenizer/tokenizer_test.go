@@ -18,9 +18,9 @@ Clipsey clipseypone@gmail.com
 package angelscript
 
 import (
-	"testing"
-	_ "github.com/Member1221/go-angelscript"
 	"fmt"
+	_ "github.com/Member1221/go-angelscript"
+	"testing"
 )
 
 func TestTokenizeProgram(t *testing.T) {
@@ -59,7 +59,7 @@ class MyClass
 	tk := NewTokenizer()
 	for i < end {
 		cur = program[i:]
-		_, l, token := tk.ParseToken(cur);
+		_, l, token := tk.ParseToken(cur)
 		if token == 0 {
 			return
 		}
@@ -79,5 +79,5 @@ class MyClass
 		}
 		i += l
 	}
-	
+
 }

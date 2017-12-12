@@ -29,41 +29,6 @@ clipseypone@gmail.com
 */
 package flags
 
-//Return codes
-type ASReturnCode int32
-
-const (
-	ASReturnSuccess                          = ASReturnCode(0)
-	ASReturnError                            = ASReturnCode(-1)
-	ASReturnContextActive                    = ASReturnCode(-2)
-	ASReturnContextNotFinished               = ASReturnCode(-3)
-	ASReturnContextNotPrepare                = ASReturnCode(-4)
-	ASReturnInvalidArg                       = ASReturnCode(-5)
-	ASReturnNoFunction                       = ASReturnCode(-6)
-	ASReturnNotSupported                     = ASReturnCode(-7)
-	ASReturnInvalidName                      = ASReturnCode(-8)
-	ASReturnNameTaken                        = ASReturnCode(-9)
-	ASReturnInvalidDeclaration               = ASReturnCode(-10)
-	ASReturnInvalidObject                    = ASReturnCode(-11)
-	ASReturnInvalidType                      = ASReturnCode(-12)
-	ASReturnAlreadyRegistered                = ASReturnCode(-13)
-	ASReturnMultipleFunctions                = ASReturnCode(-14)
-	ASReturnNoModule                         = ASReturnCode(-15)
-	ASReturnNoGlobalVar                      = ASReturnCode(-16)
-	ASReturnInvalidConfiguration             = ASReturnCode(-17)
-	ASReturnInvalidInterface                 = ASReturnCode(-18)
-	ASReturnCantBindAllFunctions             = ASReturnCode(-19)
-	ASReturnLowerArrayDimensionNotRegistered = ASReturnCode(-20)
-	ASReturnWrongConfigGroup                 = ASReturnCode(-21)
-	ASReturnConfigGroupIsInUse               = ASReturnCode(-22)
-	ASReturnIllegalBehaviourForType          = ASReturnCode(-23)
-	ASReturnWrongCallingConvention           = ASReturnCode(-24)
-	ASReturnBuildInProgress                  = ASReturnCode(-25)
-	ASReturnInitGlobalVarsFailed             = ASReturnCode(-26)
-	ASReturnOutOfMemory                      = ASReturnCode(-27)
-	ASReturnModuleIsInUse                    = ASReturnCode(-28)
-)
-
 //Engine properties
 
 type ASEngineProperties uint32

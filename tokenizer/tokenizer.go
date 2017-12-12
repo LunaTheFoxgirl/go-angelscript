@@ -168,9 +168,9 @@ const (
 	ASSharedToken     = "shared"
 	ASFinalToken      = "final"
 	ASOverrideToken   = "override"
-	ASGeASttoken        = "get"
-	ASSeASttoken        = "set"
-	ASAbstracASttoken   = "abstract"
+	ASGeASttoken      = "get"
+	ASSeASttoken      = "set"
+	ASAbstracASttoken = "abstract"
 	ASFunctionToken   = "function"
 	ASIfHandleToken   = "if_handle_then_const"
 )
@@ -299,22 +299,22 @@ func GetDefinition(tok Token) string {
 			return t.Word
 		}
 	}
-	
+
 	if tok == ASttWhiteSpace {
 		return ""
 	}
 	if tok == ASttIdentifier {
 		return "[Identifier]"
 	}
-	
+
 	if tok == ASttEnd {
 		return "<EOF>"
 	}
-	
+
 	if tok == ASttOnelineComment {
 		return "[Comment: 1 liner]"
 	}
-	
+
 	if tok == ASttMultilineComment {
 		return "[Comment: multi-liner]"
 	}
@@ -322,34 +322,34 @@ func GetDefinition(tok Token) string {
 	if tok == ASttIntConstant {
 		return "[Int]"
 	}
-	
+
 	if tok == ASttFloatConstant {
 		return "[Float]"
 	}
-		
+
 	if tok == ASttDoubleConstant {
 		return "[Double]"
 	}
-		
+
 	if tok == ASttStringConstant {
 		return "[String: 1 liner]"
 	}
-			
+
 	if tok == ASttMultilineStringConstant {
 		return "[String: 1 liner]"
 	}
-			
+
 	if tok == ASttNonTerminatedStringConstant {
 		return "[String: NON TERMINATED!]"
-	}	
-		
+	}
+
 	if tok == ASttBitsConstant {
 		return "[Bits constant]"
-	}			
+	}
 	if tok == ASttHeredocStringConstant {
 		return "[Heredoc documentation string]"
 	}
-	
+
 	if tok == ASttUnrecognizedToken {
 		return "UNKNOWN"
 	}
@@ -437,7 +437,7 @@ func (tk *Tokenizer) ParseToken(source string) (flags.ASTokenClass, uint32, Toke
 }
 
 func (tk *Tokenizer) IsWhiteSpace(source string) (bool, uint32, Token) {
-	
+
 	wSpace := []rune(ASWhitespaceToken)
 	src := []rune(source)
 

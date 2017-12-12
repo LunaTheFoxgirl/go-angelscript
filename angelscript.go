@@ -1,1 +1,36 @@
 package angelscript
+
+//Return codes
+type ASCode = int
+
+const (
+	ASSuccess                          = ASCode(0)
+	ASError                            = ASCode(-1)
+	ASContextActive                    = ASCode(-2)
+	ASContextNotFinished               = ASCode(-3)
+	ASContextNotPrepare                = ASCode(-4)
+	ASInvalidArg                       = ASCode(-5)
+	ASNoFunction                       = ASCode(-6)
+	ASNotSupported                     = ASCode(-7)
+	ASInvalidName                      = ASCode(-8)
+	ASNameTaken                        = ASCode(-9)
+	ASInvalidDeclaration               = ASCode(-10)
+	ASInvalidObject                    = ASCode(-11)
+	ASInvalidType                      = ASCode(-12)
+	ASAlreadyRegistered                = ASCode(-13)
+	ASMultipleFunctions                = ASCode(-14)
+	ASNoModule                         = ASCode(-15)
+	ASNoGlobalVar                      = ASCode(-16)
+	ASInvalidConfiguration             = ASCode(-17)
+	ASInvalidInterface                 = ASCode(-18)
+	ASCantBindAllFunctions             = ASCode(-19)
+	ASLowerArrayDimensionNotRegistered = ASCode(-20)
+	ASWrongConfigGroup                 = ASCode(-21)
+	ASConfigGroupIsInUse               = ASCode(-22)
+	ASIllegalBehaviourForType          = ASCode(-23)
+	ASWrongCallingConvention           = ASCode(-24)
+	ASBuildInProgress                  = ASCode(-25)
+	ASInitGlobalVarsFailed             = ASCode(-26)
+	ASOutOfMemory                      = ASCode(-27)
+	ASModuleIsInUse                    = ASCode(-28)
+)
