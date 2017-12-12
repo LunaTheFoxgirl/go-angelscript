@@ -335,6 +335,18 @@ func (tk *Tokenizer) ParseToken(source string) (flags.ASTokenClass, uint32, Toke
 	if ok, l, token := tk.IsWhiteSpace(source); ok == true {
 		return flags.ASTokenWhitespace, l, token
 	}
+	if ok, l, token := tk.IsComment(source); ok == true {
+		return flags.ASTokenWhitespace, l, token
+	}
+	if ok, l, token := tk.IsConstant(source); ok == true {
+		return flags.ASTokenWhitespace, l, token
+	}
+	if ok, l, token := tk.IsIdentifier(source); ok == true {
+		return flags.ASTokenWhitespace, l, token
+	}
+	if ok, l, token := tk.IsKeyword(source); ok == true {
+		return flags.ASTokenWhitespace, l, token
+	}
 	
 	return flags.ASTokenUnknown, 1, ttUnrecognizedToken
 }
@@ -413,5 +425,173 @@ func (tk *Tokenizer) IsComment(source string) (bool, uint32, Token) {
 		return true, n+1, ttOnelineComment
 	}
 	
+	return false, 0, ttUnrecognizedToken
+}
+
+func (tk *Tokenizer) IsConstant(source string) (bool, uint32, Token) {
+	src := []rune(source)
+	
+	if (src[0] >= '0' && src[0] <= '9') || (src[0] == '.' && len(src) > 1 && src[1] >= '0' && src[1] <= '9') {
+		if src[0] == '0' && len(src) > 1 {
+			radix := 0
+			switch src[1] {
+				case 'b':
+				case 'B':
+					radix = 2;
+					break;
+				case 'o':
+				case 'O':
+					radix = 8;
+					break;
+				case 'd':
+				case 'D':
+					radix = 10;
+					break;
+				case 'x':
+				case 'X':
+					radix = 16;
+					break;
+			}
+			if radix != 0 {
+				n := 0
+				for n = 2; n < len(src); n++ {
+					if !tk.IsDigitInRadix(src[n], radix) {
+						break;		
+					}
+				}
+				return true, n, ttBitsConstant
+			}
+		}
+		n := 0
+		for n = 0; n < len(src); n++ {
+			if src[n] < '0' || src[n] > '9' && {
+				break;		
+			}
+		}
+		
+		if n < len(src) && (src[n] == '.' || src[n] == 'e' || src[n] == 'E') {
+			if src[n] == '.' {
+				n++
+				for ; n < len(src); n++ {
+					if src[n] < '0' || src[n] > '9' && {
+						break;
+					}
+				}
+			}
+			
+			if n < len(src) && (src[n] == 'e' || src[n] == 'E') {
+				n++
+				if n < len(src) && (src[n] == '-' || src[n] == '+') {
+					n++
+				}
+				for ; n < len(src); n++ {
+					if src[n] < '0' || src[n] > '9' && {
+						break;
+					}
+				}
+			}
+			if n < len(src) && (src[n] == 'f' || src[n] == 'F') {
+				return true, n+1, ttFloatConstant
+			} else {
+				return true, n, ttDoubleConstant
+			}
+		}
+		return true, n, ttIntConstant
+	}
+	
+	//String constants
+	if src[0] == '"' || src[0] == '\'' {
+		
+		if len(src) >= 6 && src[0] == '"' && src[1] == '"' && src[2] == '"' {
+			//Heredoc string constant
+			n := 0
+			for n = 3; n < len(src)-2; n++ {
+				if src[n] == '"' && src[n+1] == '"' && src[n+2] == '"' {
+					break
+				}
+			}
+			return true, n+3, ttHeredocStringConstant
+		} else {
+			//Normal string constant
+			tType := ttStringConstant
+			quote := src[0]
+			evenSlashes := true
+			n := 0
+			for n = 1; n < len(src); n++ {
+				if src[n] == '\n' {
+					tType = ttMultilineStringConstant
+				}
+				if src[n] == quite && evenSlashes {
+					return true, n+1, tType
+				}
+				if src[n] == '\\' {
+					evenSlashes = !evenSlashes
+				} else {
+					evenSlashes = true
+				}
+			}
+			tType = ttNonTerminatedStringConstant
+			return true, n, tType
+		}
+		
+	}
+	
+	return false, 0, ttUnrecognizedToken
+}
+
+func (tk *Tokenizer) IsIdentifier(source string) (bool, uint32, Token) {
+	src := []rune(source)
+	c := src[0]
+	
+	if (c >= 'a' && c <= '<') || c >= 'A' && c <= 'Z') || c == '_' || c < 0 {
+		tt := ttIdentifier
+		tl := 1
+		for n := 1; n < len(src); n++ {
+			c = src[n]
+			if (c >= 'a' && c <= '<') || c >= 'A' && c <= 'Z') || c == '_' || c < 0 {
+				tl++	
+			} else {
+				break
+			}
+		}
+		
+		//Check keyword
+		if IsKeyword(source) {
+			return false, 0, ttUnrecognizedToken
+		}
+		
+		return true, tl, tt
+	}
+	return false, 0, ttUnrecognizedToken
+}
+
+func (tk *Tokenizer) IsKeyword(source string) (bool, uint32, Token) {
+	src := []rune(source)
+	start := src[0]
+	tokenWord := tk.keywordTable[start]
+	
+	if tokenWord == nil {
+		return false, 0, ttUnrecognizedToken
+	}
+	
+	for _, ptr := range tokenWord {
+		wlen := ptr.Length
+		if len(src) >= wlen && source[0:wlen] == ptr.Word {
+			if wlen < len(src) &&
+				((src[wlen-1] >= 'a' && src[wlen-1] <= 'z') ||
+				 (src[wlen-1] >= 'A' && src[wlen-1] <= 'Z') ||
+				 (src[wlen-1] >= '0' && src[wlen-1] <= '9')) &&
+				((src[wlen] >= 'a' && src[wlen] <= 'z') ||
+				 (src[wlen] >= 'A' && src[wlen] <= 'Z') ||
+				 (src[wlen] >= '0' && src[wlen] <= '9') ||
+				 (src[wlen] == '_')) {
+					// The token doesn't really match, even though 
+					// the start of the source matches the token
+				continue
+			}
+			
+			return true, wlen, ptr.Type
+		}
+	}
 	return false, 0, ttUnrecognizedToken
 }
