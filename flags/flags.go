@@ -30,7 +30,7 @@ clipseypone@gmail.com
 package flags
 
 //Return codes
-type ASReturnCode = int32
+type ASReturnCode int32
 
 const (
 	ASReturnSuccess                          = ASReturnCode(0)
@@ -66,7 +66,7 @@ const (
 
 //Engine properties
 
-type ASEngineProperties = uint32
+type ASEngineProperties uint32
 const (
 	ASPropertyAllowUnsafeReferences = ASEngineProperties(1)
 	ASPropertyOptimizeBytecode = ASEngineProperties(2)
@@ -98,7 +98,7 @@ const (
 )
 
 //Calling conventions
-type ASCallConvention = uint32
+type ASCallConvention uint32
 
 const (
 	ASCallConventionCDeclare            = ASCallConvention(0)
@@ -113,7 +113,7 @@ const (
 )
 
 //Object type flags
-type ASObjectType = uint32
+type ASObjectType uint32
 
 const (
 	ASTypeReference               = ASObjectType(1 << 0)
@@ -167,7 +167,7 @@ const (
 )
 
 //Behaviours
-type ASBehaviour = uint32
+type ASBehaviour uint32
 
 const (
 	ASBehaviourConstruct = ASBehaviour(0)
@@ -189,7 +189,7 @@ const (
 )
 
 //Context States
-type ASContextState = uint32
+type ASContextState uint32
 
 const (
 	ASExecutionFinished = ASContextState(0)
@@ -203,7 +203,7 @@ const (
 )
 
 //MessageTypes
-type ASMessageType = uint32
+type ASMessageType uint32
 const (
 	ASMsgTypeError = ASMessageType(0)
 	ASMsgTypeWarning = ASMessageType(1)
@@ -219,18 +219,18 @@ const (
 )
 
 //Token classes
-type ASTokenClass = uint32
+type ASTokenClass uint32
 const (
 	ASTokenUnknown = ASTokenClass(iota)
 	ASTokenKeyword
 	ASTokenValue
-	ASTokenTypeentifier
+	ASTokenIdentifier
 	ASTokenComment
 	ASTokenWhitespace
 )
 
 //Type id flags
-type ASTokenType = uint32
+type ASTokenType uint32
 const (
 	ASTypeIdVoid               = ASTokenType(0)
 	ASTypeIdBool               = ASTokenType(1)

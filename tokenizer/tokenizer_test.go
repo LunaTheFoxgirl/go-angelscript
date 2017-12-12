@@ -17,13 +17,67 @@ Clipsey clipseypone@gmail.com
 */
 package angelscript
 
-import ()
+import (
+	"testing"
+	_ "github.com/Member1221/go-angelscript"
+	"fmt"
+)
 
-type IScriptEngine interface {
-	AddRef() int
-	Release() int
-	ShutDownAndRelease() int
-}
-
-type ScriptEngine struct {
+func TestTokenizeProgram(t *testing.T) {
+	program := `
+//import base stuff
+import "std"
+"""MyClass is a test class, this is a test docstring."""
+class MyClass
+{
+	/*
+		Properties
+	*/
+	int property = 22;
+	
+	/*
+		Constructor
+	*/
+	MyClass()
+	{
+		
+	}
+	
+	/*
+		Methods/functions
+	*/
+	
+	//This is a function.
+	void MyFunction()
+	{
+		std::print("Hello, world!");
+	}
+}`
+	end := uint32(len(program))
+	cur := program
+	i := uint32(0)
+	tk := NewTokenizer()
+	for i < end {
+		cur = program[i:]
+		_, l, token := tk.ParseToken(cur);
+		if token == 0 {
+			return
+		}
+		if int(l) < len(cur) && l > 0 {
+			def := GetDefinition(token)
+			if def != "" {
+				if def == "[Comment: 1 liner]" {
+					fmt.Print(def + "\n")
+				} else {
+					fmt.Print(def + " ")
+				}
+			} else {
+				if cur[:1] == "\n" {
+					fmt.Print("\n")
+				}
+			}
+		}
+		i += l
+	}
+	
 }

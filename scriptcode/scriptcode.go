@@ -15,15 +15,15 @@ The original version of this library can be located at: https://www.github.com/M
 
 Clipsey clipseypone@gmail.com
 */
-package angelscript
+package scriptcode
 
-import ()
+import (
 
-type IScriptEngine interface {
-	AddRef() int
-	Release() int
-	ShutDownAndRelease() int
-}
+)
 
-type ScriptEngine struct {
+type ScriptCode struct {
+	LineOffset int
+	Code int
+	Length int
+	SharedCode bool
 }
