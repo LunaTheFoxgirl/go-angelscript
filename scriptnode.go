@@ -119,22 +119,22 @@ func (sn *ScriptNode) SetToken(token *sToken) {
 	sn.TokenType = token.Type
 }
 
-func (sn *ScriptNode) UpdateSourcePos(pos, l uint32) {
+func (sn *ScriptNode) UpdateSourcePos(pos, l int) {
 	if pos == 0 && l == 0 {
 		return
 	}
 	
 	if sn.TokenPosition == 0 && sn.TokenLength == 0 {
-		sn.TokenPosition = pos
-		sn.TokenLength = l
+		sn.TokenPosition = uint32(pos)
+		sn.TokenLength = uint32(l)
 	} else {
 		if sn.TokenPosition > pos {
-			sn.TokenLength = sn.TokenPosition + sn.TokenLength - pos
-			sn.TokenPosition = pos
+			sn.TokenLength = sn.TokenPosition + sn.TokenLength - uint32(pos)
+			sn.TokenPosition = uint32(pos)
 		}
 		
 		if pos + l > sn.TokenPosition + sn.TokenLength {
-			sn.TokenLength = pos + l - sn.TokenPosition
+			sn.TokenLength = uint32(pos) + uint32(l) - sn.TokenPosition
 		}
 	}
 }

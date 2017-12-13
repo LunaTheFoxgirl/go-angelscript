@@ -168,9 +168,9 @@ const (
 	ASSharedToken     = "shared"
 	ASFinalToken      = "final"
 	ASOverrideToken   = "override"
-	ASGeASttoken      = "get"
-	ASSeASttoken      = "set"
-	ASAbstracASttoken = "abstract"
+	ASGetToken        = "get"
+	ASSetToken        = "set"
+	ASAbstractToken   = "abstract"
 	ASFunctionToken   = "function"
 	ASIfHandleToken   = "if_handle_then_const"
 )
