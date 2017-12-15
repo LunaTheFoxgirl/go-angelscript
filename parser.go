@@ -28,9 +28,9 @@ type Parser struct {
 	CheckValidTypes       bool
 	IsParsingAppInterface bool
 
-	Engine *ScriptEngine
-	Script *ScriptCode
-	Node   *ScriptNode
+	Engine  *ScriptEngine
+	Script  *ScriptCode
+	Node    *ScriptNode
 	Builder *ScriptBuilder
 
 	tempstr   string
@@ -3032,20 +3032,26 @@ func (pr *Parser) ParseStatementBlock() *ScriptNode {
 				t1.Type != angelscript.ASttStartStatementBlock && t1.Type != angelscript.ASttEndStatementBlock {
 				pr.GetToken(&t1)
 			}
-			
+
 			if t1.Type == angelscript.ASttStartStatementBlock {
 				level := 1
 				for level > 0 {
-					if t1.Type == angelscript.ASttStartStatementBlock { level++ }
-					if t1.Type == angelscript.ASttEndStatementBlock { level-- }
-					if t1.Type == angelscript.ASttEnd { break }
-				} 
-			} else if t1.Type == angelscript.ASttEndStatementBlock {
-					pr.RewindTo(&t1)
-				} else if t1.Type == angelscript.ASttEnd {
-					//TODO: error TXT_UNEXPECTED_END_OF_FILE
-					return node
+					if t1.Type == angelscript.ASttStartStatementBlock {
+						level++
+					}
+					if t1.Type == angelscript.ASttEndStatementBlock {
+						level--
+					}
+					if t1.Type == angelscript.ASttEnd {
+						break
+					}
 				}
+			} else if t1.Type == angelscript.ASttEndStatementBlock {
+				pr.RewindTo(&t1)
+			} else if t1.Type == angelscript.ASttEnd {
+				//TODO: error TXT_UNEXPECTED_END_OF_FILE
+				return node
+			}
 			pr.IsSyntaxError = false
 		}
 	}
@@ -3054,37 +3060,39 @@ func (pr *Parser) ParseStatementBlock() *ScriptNode {
 
 func (pr *Parser) ParseInitList() *ScriptNode {
 	node := pr.CreateNode(ASsnInitList)
-	if node == nil { return nil }
-	
+	if node == nil {
+		return nil
+	}
+
 	var t1 sToken
 	pr.GetToken(&t1)
 	if t1.Type != angelscript.ASttStartStatementBlock {
 		//TODO: error expected {
 		return node
 	}
-	
+
 	node.UpdateSourcePos(t1.Position, t1.Length)
-	
+
 	pr.GetToken(&t1)
 	if t1.Type == angelscript.ASttEndStatementBlock {
 		node.UpdateSourcePos(t1.Position, t1.Length)
-		
+
 		return node
 	} else {
 		pr.RewindTo(&t1)
 		for {
 			pr.GetToken(&t1)
-			
+
 			if t1.Type == angelscript.ASttListSeparator {
 				node.AddChildLast(pr.CreateNode(ASsnUndefined))
 				node.LastChild.UpdateSourcePos(t1.Position, 1)
-				
+
 				pr.GetToken(&t1)
 				if t1.Type == angelscript.ASttEndStatementBlock {
 					node.AddChildLast(pr.CreateNode(ASsnUndefined))
 					node.LastChild.UpdateSourcePos(t1.Position, 1)
 					node.UpdateSourcePos(t1.Position, t1.Length)
-					
+
 					return node
 				}
 				pr.RewindTo(&t1)
@@ -3092,19 +3100,21 @@ func (pr *Parser) ParseInitList() *ScriptNode {
 				node.AddChildLast(pr.CreateNode(ASsnUndefined))
 				node.LastChild.UpdateSourcePos(t1.Position, 1)
 				node.UpdateSourcePos(t1.Position, t1.Length)
-				
+
 				return node
 			} else if t1.Type == angelscript.ASttStartStatementBlock {
 				pr.RewindTo(&t1)
 				node.AddChildLast(pr.ParseInitList())
-				if pr.IsSyntaxError { return node }
-				
+				if pr.IsSyntaxError {
+					return node
+				}
+
 				pr.GetToken(&t1)
 				if t1.Type == angelscript.ASttListSeparator {
 					continue
 				} else if t1.Type == angelscript.ASttEndStatementBlock {
 					node.UpdateSourcePos(t1.Position, t1.Length)
-					
+
 					return node
 				} else {
 					//TODO: error expected } or ,
@@ -3113,12 +3123,14 @@ func (pr *Parser) ParseInitList() *ScriptNode {
 			} else {
 				pr.RewindTo(&t1)
 				node.AddChildLast(pr.ParseAssignment())
-				if pr.IsSyntaxError { return node }
-				
+				if pr.IsSyntaxError {
+					return node
+				}
+
 				pr.GetToken(&t1)
 				if t1.Type == angelscript.ASttEndStatementBlock {
 					node.UpdateSourcePos(t1.Position, t1.Length)
-					
+
 					return node
 				} else {
 					//TODO: error expected } or ,
@@ -3131,57 +3143,73 @@ func (pr *Parser) ParseInitList() *ScriptNode {
 
 func (pr *Parser) ParseDeclaration(isClassProp, isGlobal bool) *ScriptNode {
 	node := pr.CreateNode(ASsnDeclaration)
-	if node == nil { return nil }
-	
+	if node == nil {
+		return nil
+	}
+
 	var t sToken
 	pr.GetToken(&t)
 	pr.RewindTo(&t)
-	
+
 	if t.Type == angelscript.ASttPrivate && isClassProp {
 		node.AddChildLast(pr.ParseToken(angelscript.ASttPrivate))
 	} else if t.Type == angelscript.ASttProtected && isClassProp {
 		node.AddChildLast(pr.ParseToken(angelscript.ASttProtected))
 	}
-	
+
 	node.AddChildLast(pr.ParseType(true, false, !isClassProp))
-	if pr.IsSyntaxError { return node }
-	
+	if pr.IsSyntaxError {
+		return node
+	}
+
 	for {
 		node.AddChildLast(pr.ParseIdentifier())
-		if pr.IsSyntaxError { return node }
-		
+		if pr.IsSyntaxError {
+			return node
+		}
+
 		if isClassProp || isGlobal {
 			pr.GetToken(&t)
 			pr.RewindTo(&t)
 			if t.Type == angelscript.ASttAssignment || t.Type == angelscript.ASttOpenParanthesis {
 				node.AddChildLast(pr.SuperficiallyParseVarInit())
-				if pr.IsSyntaxError { return node }
+				if pr.IsSyntaxError {
+					return node
+				}
 			}
 		} else {
 			pr.GetToken(&t)
 			if t.Type == angelscript.ASttOpenParanthesis {
 				pr.RewindTo(&t)
 				node.AddChildLast(pr.ParseArgList(true))
-				if pr.IsSyntaxError { return node }
+				if pr.IsSyntaxError {
+					return node
+				}
 			} else if t.Type == angelscript.ASttAssignment {
 				pr.GetToken(&t)
 				pr.RewindTo(&t)
 				if t.Type == angelscript.ASttStartStatementBlock {
 					node.AddChildLast(pr.ParseInitList())
-					if pr.IsSyntaxError { return node }
+					if pr.IsSyntaxError {
+						return node
+					}
 				} else {
 					node.AddChildLast(pr.ParseAssignment())
-					if pr.IsSyntaxError { return node }
+					if pr.IsSyntaxError {
+						return node
+					}
 				}
-			} else { pr.RewindTo(&t) }
+			} else {
+				pr.RewindTo(&t)
+			}
 		}
-		
+
 		pr.GetToken(&t)
 		if t.Type == angelscript.ASttListSeparator {
 			continue
 		} else if t.Type == angelscript.ASttEndStatement {
 			node.UpdateSourcePos(t.Position, t.Length)
-			
+
 			return node
 		} else {
 			//TODO: error expected , or ;
@@ -3195,7 +3223,7 @@ func (pr *Parser) ParseStatement() *ScriptNode {
 	var t1 sToken
 	pr.GetToken(&t1)
 	pr.RewindTo(&t1)
-	
+
 	if t1.Type == angelscript.ASttIf {
 		return pr.ParseIf()
 	} else if t1.Type == angelscript.ASttFor {
@@ -3224,78 +3252,90 @@ func (pr *Parser) ParseStatement() *ScriptNode {
 
 func (pr *Parser) ParseExpressionStatement() *ScriptNode {
 	node := pr.CreateNode(ASsnExpressionStatement)
-	if node == nil { return nil }
-	
+	if node == nil {
+		return nil
+	}
+
 	var t sToken
 	pr.GetToken(&t)
 	if t.Type == angelscript.ASttEndStatement {
 		node.UpdateSourcePos(t.Position, t.Length)
 		return node
 	}
-	
+
 	pr.RewindTo(&t)
 	node.AddChildLast(pr.ParseAssignment())
-	if pr.IsSyntaxError { return node }
-	
+	if pr.IsSyntaxError {
+		return node
+	}
+
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttEndStatement {
 		//TODO: error expected ;
 		return node
 	}
-	
+
 	node.UpdateSourcePos(t.Position, t.Length)
 	return node
 }
 
 func (pr *Parser) ParseSwitch() *ScriptNode {
 	node := pr.CreateNode(ASsnSwitch)
-	if node == nil { return nil }
-	
+	if node == nil {
+		return nil
+	}
+
 	var t sToken
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttSwitch {
 		//TODO: error expected switch
 		return node
 	}
-	
+
 	node.UpdateSourcePos(t.Position, t.Length)
-	
+
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttOpenParanthesis {
 		//TODO: error expected (
 		return node
 	}
-	
+
 	node.AddChildLast(pr.ParseAssignment())
-	if pr.IsSyntaxError { return node }
-	
+	if pr.IsSyntaxError {
+		return node
+	}
+
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttCloseParanthesis {
 		//TODO: error expected )
 		return node
 	}
-	
+
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttStartStatementBlock {
 		//TODO: error expected {
 		return node
 	}
-	
+
 	for !pr.IsSyntaxError {
 		pr.GetToken(&t)
-		if t.Type == angelscript.ASttEndStatementBlock { break }
-		
+		if t.Type == angelscript.ASttEndStatementBlock {
+			break
+		}
+
 		pr.RewindTo(&t)
-		
+
 		if t.Type != angelscript.ASttCase && t.Type != angelscript.ASttDefault {
 			//TODO: error expected case or default
 			return node
 		}
-		
+
 		node.AddChildLast(pr.ParseCase())
-		if pr.IsSyntaxError { return node }
+		if pr.IsSyntaxError {
+			return node
+		}
 	}
-	
+
 	if t.Type != angelscript.ASttEndStatementBlock {
 		//TODO: error expected }
 		return node
@@ -3305,44 +3345,48 @@ func (pr *Parser) ParseSwitch() *ScriptNode {
 
 func (pr *Parser) ParseCase() *ScriptNode {
 	node := pr.CreateNode(ASsnCase)
-	if node == nil { return nil }
-	
+	if node == nil {
+		return nil
+	}
+
 	var t sToken
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttCase && t.Type != angelscript.ASttDefault {
 		//TODO: error expected case or default
 		return node
 	}
-	
+
 	node.UpdateSourcePos(t.Position, t.Length)
-	
+
 	if t.Type == angelscript.ASttCase {
 		node.AddChildLast(pr.ParseExpression())
 	}
-	
+
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttColon {
 		//TODO: error expected :
 		return node
 	}
-	
+
 	pr.GetToken(&t)
 	pr.RewindTo(&t)
-	for t.Type != angelscript.ASttCase && 
-	t.Type != angelscript.ASttDefault &&
-	t.Type != angelscript.ASttEndStatementBlock &&
-	t.Type != angelscript.ASttBreak {
+	for t.Type != angelscript.ASttCase &&
+		t.Type != angelscript.ASttDefault &&
+		t.Type != angelscript.ASttEndStatementBlock &&
+		t.Type != angelscript.ASttBreak {
 		if pr.IsVarDecl() {
 			node.AddChildLast(pr.ParseDeclaration(false, false))
 		} else {
 			node.AddChildLast(pr.ParseStatement())
 		}
-		if pr.IsSyntaxError { return node }
-		
+		if pr.IsSyntaxError {
+			return node
+		}
+
 		pr.GetToken(&t)
 		pr.RewindTo(&t)
 	}
-	
+
 	if t.Type == angelscript.ASttBreak {
 		node.AddChildLast(pr.ParseBreak())
 	}
@@ -3351,85 +3395,99 @@ func (pr *Parser) ParseCase() *ScriptNode {
 
 func (pr *Parser) ParseIf() *ScriptNode {
 	node := pr.CreateNode(ASsnIf)
-	
+
 	var t sToken
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttIf {
 		//TODO: error expected if
 		return node
 	}
-	
+
 	node.UpdateSourcePos(t.Position, t.Length)
-	
+
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttOpenParanthesis {
 		//TODO: error expected (
 		return node
 	}
-	
+
 	node.AddChildLast(pr.ParseAssignment())
-	if pr.IsSyntaxError { return node }
-	
+	if pr.IsSyntaxError {
+		return node
+	}
+
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttCloseParanthesis {
 		//TODO: error expected )
 		return node
 	}
-	
+
 	node.AddChildLast(pr.ParseStatement())
-	if pr.IsSyntaxError { return node }
-	
+	if pr.IsSyntaxError {
+		return node
+	}
+
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttElse {
 		pr.RewindTo(&t)
 		return node
 	}
-	
+
 	node.AddChildLast(pr.ParseStatement())
-	
+
 	return node
 }
 
 func (pr *Parser) ParseFor() *ScriptNode {
 	node := pr.CreateNode(ASsnFor)
-	if node == nil { return nil }
-	
+	if node == nil {
+		return nil
+	}
+
 	var t sToken
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttFor {
 		//TODO: error expected for
 		return node
 	}
-	
+
 	node.UpdateSourcePos(t.Position, t.Length)
-	
+
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttOpenParanthesis {
 		//TODO: error expected (
 		return node
 	}
-	
+
 	if pr.IsVarDecl() {
 		node.AddChildLast(pr.ParseDeclaration(false, false))
 	} else {
 		node.AddChildLast(pr.ParseExpressionStatement())
 	}
-	if pr.IsSyntaxError { return node }
-	
+	if pr.IsSyntaxError {
+		return node
+	}
+
 	node.AddChildLast(pr.ParseExpressionStatement())
-	if pr.IsSyntaxError { return node }
-	
+	if pr.IsSyntaxError {
+		return node
+	}
+
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttCloseParanthesis {
 		pr.RewindTo(&t)
-		
+
 		for {
 			n := pr.CreateNode(ASsnExpressionStatement)
-			if n == nil { return nil }
+			if n == nil {
+				return nil
+			}
 			node.AddChildLast(n)
 			n.AddChildLast(pr.ParseAssignment())
-			if pr.IsSyntaxError { return node }
-			
+			if pr.IsSyntaxError {
+				return node
+			}
+
 			pr.GetToken(&t)
 			if t.Type == angelscript.ASttListSeparator {
 				continue
@@ -3441,203 +3499,223 @@ func (pr *Parser) ParseFor() *ScriptNode {
 			}
 		}
 	}
-	
+
 	node.AddChildLast(pr.ParseStatement())
-	
+
 	return node
 }
 
 func (pr *Parser) ParseWhile() *ScriptNode {
 	node := pr.CreateNode(ASsnWhile)
-	if node == nil { return nil }
-	
+	if node == nil {
+		return nil
+	}
+
 	var t sToken
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttWhile {
 		//TODO: error expected while
 		return node
 	}
-	
+
 	node.UpdateSourcePos(t.Position, t.Length)
-	
+
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttOpenParanthesis {
 		//TODO: error expected (
 		return node
 	}
-	
+
 	node.AddChildLast(pr.ParseAssignment())
-	if pr.IsSyntaxError { return node }
-	
+	if pr.IsSyntaxError {
+		return node
+	}
+
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttCloseParanthesis {
 		//TODO: error expected )
 		return node
 	}
-	
+
 	node.AddChildLast(pr.ParseStatement())
-	
+
 	return node
 }
 
 func (pr *Parser) ParseDoWhile() *ScriptNode {
 	node := pr.CreateNode(ASsnDoWhile)
-	if node == nil { return nil }
-	
+	if node == nil {
+		return nil
+	}
+
 	var t sToken
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttDo {
 		//TODO: error expected do
 		return node
 	}
-	
+
 	node.UpdateSourcePos(t.Position, t.Length)
-	
+
 	node.AddChildLast(pr.ParseStatement())
-	if pr.IsSyntaxError { return node }
-	
+	if pr.IsSyntaxError {
+		return node
+	}
+
 	pr.GetToken(&t)
 	if t.Type == angelscript.ASttWhile {
 		//TODO: error expected while
 		return node
 	}
-	
+
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttOpenParanthesis {
 		//TODO: error expected (
 		return node
 	}
-	
+
 	node.AddChildLast(pr.ParseAssignment())
-	if pr.IsSyntaxError { return node }
-	
+	if pr.IsSyntaxError {
+		return node
+	}
+
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttCloseParanthesis {
 		//TODO: error expected )
 		return node
 	}
-	
+
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttEndStatement {
 		//TODO: error expected ;
 		return node
 	}
-	
+
 	node.UpdateSourcePos(t.Position, t.Length)
-	
+
 	return node
-	
+
 }
 
 func (pr *Parser) ParseReturn() *ScriptNode {
 	node := pr.CreateNode(ASsnReturn)
-	if node == nil { return nil }
-	
+	if node == nil {
+		return nil
+	}
+
 	var t sToken
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttReturn {
 		//TODO: error expected return
 		return node
 	}
-	
+
 	node.UpdateSourcePos(t.Position, t.Length)
-	
+
 	pr.GetToken(&t)
 	if t.Type == angelscript.ASttEndStatement {
 		node.UpdateSourcePos(t.Position, t.Length)
 		return node
 	}
 	pr.RewindTo(&t)
-	
+
 	node.AddChildLast(pr.ParseAssignment())
-	if pr.IsSyntaxError { return node }
-	
+	if pr.IsSyntaxError {
+		return node
+	}
+
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttEndStatement {
 		//TODO: error expected ;
 		return node
 	}
-	
+
 	node.UpdateSourcePos(t.Position, t.Length)
 	return node
 }
 
 func (pr *Parser) ParseBreak() *ScriptNode {
 	node := pr.CreateNode(ASsnBreak)
-	if node == nil { return nil }
-	
+	if node == nil {
+		return nil
+	}
+
 	var t sToken
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttBreak {
 		//TODO: error expected break
 		return node
 	}
-	
+
 	node.UpdateSourcePos(t.Position, t.Length)
-	
+
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttEndStatement {
 		//TODO: error expected ;
 	}
-	
+
 	node.UpdateSourcePos(t.Position, t.Length)
 	return node
 }
 
 func (pr *Parser) ParseContinue() *ScriptNode {
 	node := pr.CreateNode(ASsnContinue)
-	if node == nil { return nil }
-	
+	if node == nil {
+		return nil
+	}
+
 	var t sToken
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttContinue {
 		//TODO: error expected continue
 		return node
 	}
-	
+
 	node.UpdateSourcePos(t.Position, t.Length)
-	
+
 	pr.GetToken(&t)
 	if t.Type != angelscript.ASttEndStatement {
 		//TODO: error expected token ;
 	}
-	
+
 	node.UpdateSourcePos(t.Position, t.Length)
 	return node
 }
 
 func (pr *Parser) ParseTypedef() *ScriptNode {
 	node := pr.CreateNode(ASsnTypedef)
-	if node == nil { return nil }
-	
+	if node == nil {
+		return nil
+	}
+
 	var token sToken
-	
+
 	pr.GetToken(&token)
 	if token.Type != angelscript.ASttTypedef {
 		//TODO: error expected typedef
 		return node
 	}
-	
+
 	node.SetToken(&token)
 	node.UpdateSourcePos(token.Position, token.Length)
-	
+
 	pr.GetToken(&token)
 	pr.RewindTo(&token)
-	
+
 	if !pr.IsRealType(token.Type) || token.Type == angelscript.ASttVoid {
 		//TODO: error TXT_UNEXPECTED_TOKEN_s
 		return node
 	}
-	
+
 	node.AddChildLast(pr.ParseRealType())
 	node.AddChildLast(pr.ParseIdentifier())
-	
+
 	pr.GetToken(&token)
 	if token.Type != angelscript.ASttEndStatement {
 		pr.RewindTo(&token)
 		//TODO: error expected ;
 	}
-	
+
 	return node
 }
 
@@ -3653,5 +3731,3 @@ func (pr *Parser) ParseMethodOverrideBehaviors(node *ScriptNode) {
 		}
 	}
 }
-
-//func (pr *Parser)
