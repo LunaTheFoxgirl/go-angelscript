@@ -5,6 +5,10 @@ import (
 )
 
 //TODO: Implement builder
-type Builder struct {
+type ScriptBuilder struct {
 	
+}
+
+func (sb *ScriptBuilder) DoesTypeExist(typ string) bool {
+	return true
 }

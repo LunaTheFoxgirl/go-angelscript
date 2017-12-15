@@ -27,3 +27,8 @@ type IScriptEngine interface {
 
 type ScriptEngine struct {
 }
+
+func (e *ScriptEngine) IsTemplateType(t string) bool {
+	//Placeholder, add code here!
+	return false
+}

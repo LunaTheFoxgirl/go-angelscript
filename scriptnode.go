@@ -128,12 +128,12 @@ func (sn *ScriptNode) UpdateSourcePos(pos, l int) {
 		sn.TokenPosition = uint32(pos)
 		sn.TokenLength = uint32(l)
 	} else {
-		if sn.TokenPosition > pos {
+		if sn.TokenPosition > uint32(pos) {
 			sn.TokenLength = sn.TokenPosition + sn.TokenLength - uint32(pos)
 			sn.TokenPosition = uint32(pos)
 		}
 		
-		if pos + l > sn.TokenPosition + sn.TokenLength {
+		if uint32(pos + l) > sn.TokenPosition + sn.TokenLength {
 			sn.TokenLength = uint32(pos) + uint32(l) - sn.TokenPosition
 		}
 	}
@@ -158,7 +158,7 @@ func (sn *ScriptNode) AddChildLast(node *ScriptNode) {
 		node.Parent = sn
 	}
 	
-	sn.UpdateSourcePos(node.TokenPosition, node.TokenLength)
+	sn.UpdateSourcePos(int(node.TokenPosition), int(node.TokenLength))
 }
 
 func (sn *ScriptNode) DisconnectParent() {
