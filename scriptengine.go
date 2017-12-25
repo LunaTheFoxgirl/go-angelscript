@@ -17,7 +17,9 @@ Clipsey clipseypone@gmail.com
 */
 package angelscript
 
-import ()
+import (
+	"github.com/Member1221/go-angelscript/tokenizer"
+)
 
 type IScriptEngine interface {
 	AddRef() int
@@ -26,6 +28,11 @@ type IScriptEngine interface {
 }
 
 type ScriptEngine struct {
+	tok *tokens.Tokenizer
+}
+
+func NewScriptEngine() *ScriptEngine {
+	return &ScriptEngine{tokens.NewTokenizer()}
 }
 
 func (e *ScriptEngine) IsTemplateType(t string) bool {

@@ -34,7 +34,7 @@ func NewScriptCode() ScriptCode {
 	return ScriptCode{
 		Offset:     0,
 		Code:       "",
-		Length: 0,
+		Length:		0,
 		Shared:     false,
 	}
 }
@@ -61,7 +61,7 @@ func (sc *ScriptCode) SetCode(name, code string, makecopy bool) int {
 		}
 	}
 	sc.Positions = append(sc.Positions, uint32(len(coder)))
-	
+	sc.Length = len(coder)
 	//ASSuccess
 	return 0
 }
@@ -101,7 +101,7 @@ func (sc *ScriptCode) TokenEquals(pos, l int, str string) bool {
 	if pos + l > sc.Length {
 		return false
 	}
-	s := sc.Code[pos:l]
+	s := sc.Code[pos:pos+l]
 	if s == str {
 		return true
 	}

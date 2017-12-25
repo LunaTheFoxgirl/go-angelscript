@@ -19,6 +19,7 @@ package angelscript
 
 import (
 	"github.com/Member1221/go-angelscript/tokenizer"
+	"fmt"
 )
 
 type ScriptNodeType uint32
@@ -72,14 +73,15 @@ const (
 )
 
 type sToken struct {
-	Type angelscript.Token
+	Type tokens.Token
 	Position int
 	Length int
 }
 
+// ScriptNode is a node in the script containing a range of tokens for compilation.
 type ScriptNode struct {
 	NodeType ScriptNodeType
-	TokenType angelscript.Token
+	TokenType tokens.Token
 	TokenPosition uint32
 	TokenLength uint32
 	Parent *ScriptNode
@@ -89,13 +91,45 @@ type ScriptNode struct {
 	LastChild *ScriptNode
 }
 
+
 func NewScriptNode(t ScriptNodeType) *ScriptNode {
 	return &ScriptNode{
 		NodeType: t,
-		TokenType: angelscript.ASttUnrecognizedToken,
+		TokenType: tokens.ASttUnrecognizedToken,
 		TokenPosition: 0,
 		TokenLength: 0,
 	}
+}
+
+func (sn *ScriptNode) ToTList() string {
+	f := sn.FirstChild
+	fmt.Println("Going down a level -->")
+	var o string
+	if f != nil {
+		o = tokens.GetDefinition(f.TokenType)
+		for f != nil {
+			if f.TokenLength <= 1 { f = f.Next; continue; }
+			if f.Previous == nil {
+				if f.Next == nil {
+					o += " { " + f.ToTList() + "} "
+					f = f.Next
+					continue
+				}
+				o += " { " + f.ToTList() + "}"
+			} else if f.Next != nil {
+				if f.Next.Next == nil {
+					o += " { " + f.ToTList() + "} "
+					f = f.Next.Next
+					continue
+				}
+				o += ", { " + f.ToTList() + "}"
+			} else {
+				o += ", { " + f.ToTList() + "} "
+			}
+			f = f.Next
+		}
+	}
+	return o
 }
 
 func (sn *ScriptNode) Destroy(engine *ScriptEngine) {
@@ -139,7 +173,11 @@ func (sn *ScriptNode) UpdateSourcePos(pos, l int) {
 	}
 }
 
-func (sn *ScriptNode) AddChildLast(node *ScriptNode) {
+func (sn *ScriptNode) AddChildLast(node *ScriptNode, err error) {
+	if err != nil {
+		fmt.Println("[Angelscript Error]", err)
+		return
+	}
 	if node == nil {
 		return
 	}

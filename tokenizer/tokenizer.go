@@ -15,12 +15,12 @@ The original version of this library can be located at: https://www.github.com/M
 
 Clipsey clipseypone@gmail.com
 */
-package angelscript
+package tokens
 
 import (
 	_ "encoding/binary"
 	"github.com/Member1221/go-angelscript/flags"
-	_ "reflect"
+	"strconv"
 )
 
 //Token definition
@@ -293,6 +293,31 @@ var tokenWords []TokenWord = []TokenWord{
 	asTokenDef("xor", ASttXor),
 }
 
+func GetDefinitionOrList(toks []Token) string {
+	if len(toks) == 1 {
+		return GetDefinition(toks[0])
+	}
+	o := ""
+	for i, t := range toks {
+		if i == 0 {
+			if len(toks) == 2 {
+				o += GetDefinition(t) + " or "
+				continue
+			}
+			o += GetDefinition(t) + ", "
+		} else if i == len(toks)-1 {
+			o += GetDefinition(t)
+		} else {
+			if i == len(toks) - 2 {
+				o += GetDefinition(t) + " or "
+				continue
+			}
+			o += GetDefinition(t) + ", "
+		}
+	}
+	return o
+}
+
 func GetDefinition(tok Token) string {
 	for _, t := range tokenWords {
 		if t.Type == tok {
@@ -304,7 +329,7 @@ func GetDefinition(tok Token) string {
 		return ""
 	}
 	if tok == ASttIdentifier {
-		return "[Identifier]"
+		return "<identifier>"
 	}
 
 	if tok == ASttEnd {
@@ -312,48 +337,53 @@ func GetDefinition(tok Token) string {
 	}
 
 	if tok == ASttOnelineComment {
-		return "[Comment: 1 liner]"
+		return "<comment>"
 	}
 
 	if tok == ASttMultilineComment {
-		return "[Comment: multi-liner]"
+		return "<multiline comment>"
 	}
 
+	if tok == ASttClass {
+		return "class"
+	}
+	
 	if tok == ASttIntConstant {
-		return "[Int]"
+		return "int"
 	}
 
 	if tok == ASttFloatConstant {
-		return "[Float]"
+		return "float"
 	}
 
 	if tok == ASttDoubleConstant {
-		return "[Double]"
+		return "double"
 	}
 
 	if tok == ASttStringConstant {
-		return "[String: 1 liner]"
+		return "<string>"
 	}
 
 	if tok == ASttMultilineStringConstant {
-		return "[String: 1 liner]"
+		return "<multiline string>"
 	}
 
 	if tok == ASttNonTerminatedStringConstant {
-		return "[String: NON TERMINATED!]"
+		return "<nonterminated string>"
 	}
 
 	if tok == ASttBitsConstant {
-		return "[Bits constant]"
+		return "bits"
 	}
+
 	if tok == ASttHeredocStringConstant {
-		return "[Heredoc documentation string]"
+		return "<heredoc comment>"
 	}
 
 	if tok == ASttUnrecognizedToken {
-		return "UNKNOWN"
+		return "unknown token"
 	}
-	return ""
+	return strconv.Itoa(int(tok))
 }
 
 type Tokenizer struct {
@@ -410,8 +440,8 @@ func (tk *Tokenizer) IsDigitInRadix(ch rune, radix int) bool {
 	return false
 }
 
-func (tk *Tokenizer) GetToken(source string) (uint32, flags.ASTokenClass) {
-	t, tokenLength, _ := tk.ParseToken(source)
+func (tk *Tokenizer) GetToken(source string) (uint32, Token) {
+	_, tokenLength, t := tk.ParseToken(source)
 	return tokenLength, t
 }
 
@@ -432,7 +462,6 @@ func (tk *Tokenizer) ParseToken(source string) (flags.ASTokenClass, uint32, Toke
 	if ok, l, token := tk.IsKeyword(source); ok == true {
 		return flags.ASTokenKeyword, l, token
 	}
-
 	return flags.ASTokenUnknown, 1, ASttUnrecognizedToken
 }
 
@@ -586,7 +615,8 @@ func (tk *Tokenizer) IsConstant(source string) (bool, uint32, Token) {
 		}
 		return true, uint32(n), ASttIntConstant
 	}
-
+	l := 0
+	t := ASttUnrecognizedToken
 	//String constants
 	if src[0] == '"' || src[0] == '\'' {
 
@@ -618,10 +648,10 @@ func (tk *Tokenizer) IsConstant(source string) (bool, uint32, Token) {
 					evenSlashes = true
 				}
 			}
-			ASttype = ASttNonTerminatedStringConstant
-			return true, uint32(n), ASttype
+			t = ASttNonTerminatedStringConstant
+			l = n
 		}
-
+		return true, uint32(l),t
 	}
 
 	return false, 0, ASttUnrecognizedToken

@@ -15,11 +15,10 @@ The original version of this library can be located at: https://www.github.com/M
 
 Clipsey clipseypone@gmail.com
 */
-package angelscript
+package tokens
 
 import (
 	"fmt"
-	_ "github.com/Member1221/go-angelscript"
 	"testing"
 )
 
