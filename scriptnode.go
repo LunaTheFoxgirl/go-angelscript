@@ -20,6 +20,7 @@ package angelscript
 import (
 	"github.com/Member1221/go-angelscript/tokenizer"
 	"fmt"
+	"strconv"
 )
 
 type ScriptNodeType uint32
@@ -103,28 +104,29 @@ func NewScriptNode(t ScriptNodeType) *ScriptNode {
 
 func (sn *ScriptNode) ToTList() string {
 	f := sn.FirstChild
-	fmt.Println("Going down a level -->")
-	var o string
+	//fmt.Println("Going down a level -->")
+	var o string = ""
+	o = strconv.Itoa(int(sn.NodeType))
+	if sn.NodeType == ASsnDataType && sn.TokenType != tokens.ASttUnrecognizedToken { o = tokens.GetDefinition(sn.TokenType)}
 	if f != nil {
-		o = tokens.GetDefinition(f.TokenType)
 		for f != nil {
 			if f.TokenLength <= 1 { f = f.Next; continue; }
 			if f.Previous == nil {
 				if f.Next == nil {
-					o += " { " + f.ToTList() + "} "
+					o += " { " + f.ToTList() + " }"
 					f = f.Next
 					continue
 				}
-				o += " { " + f.ToTList() + "}"
+				o += " { " + f.ToTList() + " }"
 			} else if f.Next != nil {
 				if f.Next.Next == nil {
-					o += " { " + f.ToTList() + "} "
+					o += " { " + f.ToTList() + " }"
 					f = f.Next.Next
 					continue
 				}
-				o += ", { " + f.ToTList() + "}"
+				o += ", { " + f.ToTList() + " }"
 			} else {
-				o += ", { " + f.ToTList() + "} "
+				o += ", { " + f.ToTList() + " }"
 			}
 			f = f.Next
 		}

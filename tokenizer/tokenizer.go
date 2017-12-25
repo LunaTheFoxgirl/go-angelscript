@@ -380,10 +380,7 @@ func GetDefinition(tok Token) string {
 		return "<heredoc comment>"
 	}
 
-	if tok == ASttUnrecognizedToken {
-		return "unknown token"
-	}
-	return strconv.Itoa(int(tok))
+	return "unknown token (" + strconv.Itoa(int(tok)) + ")"
 }
 
 type Tokenizer struct {
