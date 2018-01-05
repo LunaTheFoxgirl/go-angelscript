@@ -377,7 +377,7 @@ func GetDefinition(tok Token) string {
 	}
 
 	if tok == ASttHeredocStringConstant {
-		return "<heredoc comment>"
+		return "<heredoc string>"
 	}
 
 	return "unknown token (" + strconv.Itoa(int(tok)) + ")"

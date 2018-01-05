@@ -30,6 +30,15 @@ clipseypone@gmail.com
 package flags
 
 //Engine properties
+//Util stuff.
+type ASBYTE = byte
+type ASWORD = uint16
+type ASUINT = uint
+type ASDWORD = uint32
+type ASQWORD = uint64
+type ASPWORD = uint
+type ASINT64 = int64
+type ASBOOL = bool
 
 type ASEngineProperties uint32
 const (
@@ -78,57 +87,57 @@ const (
 )
 
 //Object type flags
-type ASObjectType uint32
+type ASObjectType = ASDWORD
 
 const (
-	ASTypeReference               = ASObjectType(1 << 0)
-	ASTypeValue                   = ASObjectType(1 << 1)
-	ASTypeGC                      = ASObjectType(1 << 2)
-	ASTypePod                     = ASObjectType(1 << 3)
-	ASTypeNoHandle                = ASObjectType(1 << 4)
-	ASTypeScoped                  = ASObjectType(1 << 5)
-	ASTypeTemplate                = ASObjectType(1 << 6)
-	ASTypeASHandle                = ASObjectType(1 << 7)
-	ASTypeAppClass                = ASObjectType(1 << 8)
-	ASTypeAppClassConstructor     = ASObjectType(1 << 9)
-	ASTypeAppClassDestructor      = ASObjectType(1 << 10)
-	ASTypeAppClassAssignment      = ASObjectType(1 << 11)
-	ASTypeAppClassCopyConstructor = ASObjectType(1 << 12)
-	AsTypeAppClassC               = ASObjectType(ASTypeAppClass + ASTypeAppClassConstructor)
-	AsTypeAppClassCD              = ASObjectType(ASTypeAppClass + ASTypeAppClassConstructor + ASTypeAppClassDestructor)
-	AsTypeAppClassCA              = ASObjectType(ASTypeAppClass + ASTypeAppClassConstructor + ASTypeAppClassAssignment)
-	AsTypeAppClassCK              = ASObjectType(ASTypeAppClass + ASTypeAppClassConstructor + ASTypeAppClassCopyConstructor)
-	AsTypeAppClassCDA             = ASObjectType(ASTypeAppClass + ASTypeAppClassConstructor + ASTypeAppClassDestructor + ASTypeAppClassAssignment)
-	AsTypeAppClassCDK             = ASObjectType(ASTypeAppClass + ASTypeAppClassConstructor + ASTypeAppClassDestructor + ASTypeAppClassCopyConstructor)
-	AsTypeAppClassCAK             = ASObjectType(ASTypeAppClass + ASTypeAppClassConstructor + ASTypeAppClassAssignment + ASTypeAppClassCopyConstructor)
-	AsTypeAppClassCDAK            = ASObjectType(ASTypeAppClass + ASTypeAppClassConstructor + ASTypeAppClassDestructor + ASTypeAppClassAssignment + ASTypeAppClassCopyConstructor)
-	AsTypeAppClassD               = ASObjectType(ASTypeAppClass + ASTypeAppClassDestructor)
-	AsTypeAppClassDA              = ASObjectType(ASTypeAppClass + ASTypeAppClassDestructor + ASTypeAppClassAssignment)
-	AsTypeAppClassDAK             = ASObjectType(ASTypeAppClass + ASTypeAppClassDestructor + ASTypeAppClassAssignment + ASTypeAppClassCopyConstructor)
-	AsTypeAppClassA               = ASObjectType(ASTypeAppClass + ASTypeAppClassAssignment)
-	AsTypeAppClassAK              = ASObjectType(ASTypeAppClass + ASTypeAppClassAssignment + ASTypeAppClassCopyConstructor)
-	AsTypeAppClassK               = ASObjectType(ASTypeAppClass + ASTypeAppClassCopyConstructor)
-	AsTypeAppPrimitive            = ASObjectType(1 << 13)
-	AsTypeAppFloat                = ASObjectType(1 << 14)
-	AsTypeAppArray                = ASObjectType(1 << 15)
-	AsTypeAppClassAllInts         = ASObjectType(1 << 16)
-	AsTypeAppClassAllFloats       = ASObjectType(1 << 17)
-	AsTypeNoCount                 = ASObjectType(1 << 18)
-	AsTypeAppClassAlign8          = ASObjectType(1 << 19)
-	AsTypeAppImplicitHandle       = ASObjectType(1 << 20)
-	AsTypeAppMaskValidFlags       = ASObjectType(0x1FFFFF)
+	ASObjectReference               = ASObjectType(1 << 0)
+	ASObjectValue                   = ASObjectType(1 << 1)
+	ASObjectGC                      = ASObjectType(1 << 2)
+	ASObjectPod                     = ASObjectType(1 << 3)
+	ASObjectNoHandle                = ASObjectType(1 << 4)
+	ASObjectScoped                  = ASObjectType(1 << 5)
+	ASObjectTemplate                = ASObjectType(1 << 6)
+	ASObjectASHandle                = ASObjectType(1 << 7)
+	ASObjectAppClass                = ASObjectType(1 << 8)
+	ASObjectAppClassConstructor     = ASObjectType(1 << 9)
+	ASObjectAppClassDestructor      = ASObjectType(1 << 10)
+	ASObjectAppClassAssignment      = ASObjectType(1 << 11)
+	ASObjectAppClassCopyConstructor = ASObjectType(1 << 12)
+	ASObjectAppClassC               = ASObjectType(ASObjectAppClass + ASObjectAppClassConstructor)
+	ASObjectAppClassCD              = ASObjectType(ASObjectAppClass + ASObjectAppClassConstructor + ASObjectAppClassDestructor)
+	ASObjectAppClassCA              = ASObjectType(ASObjectAppClass + ASObjectAppClassConstructor + ASObjectAppClassAssignment)
+	ASObjectAppClassCK              = ASObjectType(ASObjectAppClass + ASObjectAppClassConstructor + ASObjectAppClassCopyConstructor)
+	ASObjectAppClassCDA             = ASObjectType(ASObjectAppClass + ASObjectAppClassConstructor + ASObjectAppClassDestructor + ASObjectAppClassAssignment)
+	ASObjectAppClassCDK             = ASObjectType(ASObjectAppClass + ASObjectAppClassConstructor + ASObjectAppClassDestructor + ASObjectAppClassCopyConstructor)
+	ASObjectAppClassCAK             = ASObjectType(ASObjectAppClass + ASObjectAppClassConstructor + ASObjectAppClassAssignment + ASObjectAppClassCopyConstructor)
+	ASObjectAppClassCDAK            = ASObjectType(ASObjectAppClass + ASObjectAppClassConstructor + ASObjectAppClassDestructor + ASObjectAppClassAssignment + ASObjectAppClassCopyConstructor)
+	ASObjectAppClassD               = ASObjectType(ASObjectAppClass + ASObjectAppClassDestructor)
+	ASObjectAppClassDA              = ASObjectType(ASObjectAppClass + ASObjectAppClassDestructor + ASObjectAppClassAssignment)
+	ASObjectAppClassDAK             = ASObjectType(ASObjectAppClass + ASObjectAppClassDestructor + ASObjectAppClassAssignment + ASObjectAppClassCopyConstructor)
+	ASObjectAppClassA               = ASObjectType(ASObjectAppClass + ASObjectAppClassAssignment)
+	ASObjectAppClassAK              = ASObjectType(ASObjectAppClass + ASObjectAppClassAssignment + ASObjectAppClassCopyConstructor)
+	ASObjectAppClassK               = ASObjectType(ASObjectAppClass + ASObjectAppClassCopyConstructor)
+	ASObjectAppPrimitive            = ASObjectType(1 << 13)
+	ASObjectAppFloat                = ASObjectType(1 << 14)
+	ASObjectAppArray                = ASObjectType(1 << 15)
+	ASObjectAppClassAllInts         = ASObjectType(1 << 16)
+	ASObjectAppClassAllFloats       = ASObjectType(1 << 17)
+	ASObjectNoCount                 = ASObjectType(1 << 18)
+	ASObjectAppClassAlign8          = ASObjectType(1 << 19)
+	ASObjectAppImplicitHandle       = ASObjectType(1 << 20)
+	ASObjectAppMaskValidFlags       = ASObjectType(0x1FFFFF)
 
 	//Internal Flags
-	AsTypeScriptObject    = ASObjectType(1 << 21)
-	AsTypeShared          = ASObjectType(1 << 22)
-	AsTypeNoInherit       = ASObjectType(1 << 23)
-	AsTypeFuncDev         = ASObjectType(1 << 24)
-	AsTypeListPattern     = ASObjectType(1 << 25)
-	AsTypeEnum            = ASObjectType(1 << 26)
-	AsTypeTemplateSubType = ASObjectType(1 << 27)
-	AsTypeTypeDef         = ASObjectType(1 << 28)
-	AsTypeAbstract        = ASObjectType(1 << 29)
-	AsTypeAppAlign16      = ASObjectType(1 << 30)
+	ASObjectScriptObject    = ASObjectType(1 << 21)
+	ASObjectShared          = ASObjectType(1 << 22)
+	ASObjectNoInherit       = ASObjectType(1 << 23)
+	ASObjectFuncDef         = ASObjectType(1 << 24)
+	ASObjectListPattern     = ASObjectType(1 << 25)
+	ASObjectEnum            = ASObjectType(1 << 26)
+	ASObjectTemplateSubType = ASObjectType(1 << 27)
+	ASObjectTypeDef         = ASObjectType(1 << 28)
+	ASObjectAbstract        = ASObjectType(1 << 29)
+	ASObjectAppAlign16      = ASObjectType(1 << 30)
 )
 
 //Behaviours

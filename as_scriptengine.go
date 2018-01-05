@@ -19,20 +19,34 @@ package angelscript
 
 import (
 	"github.com/Member1221/go-angelscript/tokenizer"
+	"sync"
 )
 
-type IScriptEngine interface {
-	AddRef() int
-	Release() int
-	ShutDownAndRelease() int
-}
-
 type ScriptEngine struct {
+	mtx sync.RWMutex
 	tok *tokens.Tokenizer
 }
 
 func NewScriptEngine() *ScriptEngine {
-	return &ScriptEngine{tokens.NewTokenizer()}
+	return &ScriptEngine{sync.RWMutex{}, tokens.NewTokenizer()}
+}
+
+func (e *ScriptEngine) AquireShared() {
+	e.mtx.RLock()
+}
+
+func (e *ScriptEngine) AquireExclusive() {
+	e.mtx.Lock()
+	e.mtx.RLock()
+}
+
+func (e *ScriptEngine) ReleaseExclusive() {
+	e.mtx.Unlock()
+	e.mtx.RUnlock()
+}
+
+func (e *ScriptEngine) ReleaseShared() {
+	e.mtx.RUnlock()
 }
 
 func (e *ScriptEngine) IsTemplateType(t string) bool {

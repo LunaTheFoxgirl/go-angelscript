@@ -20,57 +20,56 @@ package angelscript
 import (
 	"github.com/Member1221/go-angelscript/tokenizer"
 	"fmt"
-	"strconv"
 )
 
-type ScriptNodeType uint32
+type ScriptNodeType string
 
 const (
-	ASsnUndefined = ScriptNodeType(iota)
-	ASsnScript
-	ASsnFunction
-	ASsnConstant
-	ASsnDataType
-	ASsnIdentifier
-	ASsnParameterList
-	ASsnStatementBlock
-	ASsnDeclaration
-	ASsnExpressionStatement
-	ASsnIf
-	ASsnFor
-	ASsnWhile
-	ASsnReturn
-	ASsnExpression
-	ASsnExprTerm
-	ASsnFunctionCall
-	ASsnConstructCall
-	ASsnArgList
-	ASsnExprPreOp
-	ASsnExprPostOp
-	ASsnExprOperator
-	ASsnExprValue
-	ASsnBreak
-	ASsnContinue
-	ASsnDoWhile
-	ASsnAssignment
-	ASsnCondition
-	ASsnSwitch
-	ASsnCase
-	ASsnImport
-	ASsnClass
-	ASsnInitList
-	ASsnInterface
-	ASsnEnum
-	ASsnTypedef
-	ASsnCast
-	ASsnVariableAccess
-	ASsnFuncDef
-	ASsnVirtualProperty
-	ASsnNamespace
-	ASsnMixin
-	ASsnListPattern
-	ASsnNamedArgument
-	ASsnScope
+	ASsnUndefined = ScriptNodeType("UNDEFINED")
+	ASsnScript = ScriptNodeType("<script>")
+	ASsnFunction = ScriptNodeType("<function>")
+	ASsnConstant = ScriptNodeType("<constant>")
+	ASsnDataType = ScriptNodeType("<data type>")
+	ASsnIdentifier = ScriptNodeType("<identifier>")
+	ASsnParameterList = ScriptNodeType("<param list>")
+	ASsnStatementBlock = ScriptNodeType("<statement block>")
+	ASsnDeclaration = ScriptNodeType("<declaration>")
+	ASsnExpressionStatement = ScriptNodeType("<expr statement>")
+	ASsnIf = ScriptNodeType("<if>")
+	ASsnFor = ScriptNodeType("<for>")
+	ASsnWhile = ScriptNodeType("<while>")
+	ASsnReturn = ScriptNodeType("<return>")
+	ASsnExpression = ScriptNodeType("<expr>")
+	ASsnExprTerm = ScriptNodeType("<expr term>")
+	ASsnFunctionCall = ScriptNodeType("<function call>")
+	ASsnConstructCall = ScriptNodeType("<construct call>")
+	ASsnArgList = ScriptNodeType("<arg list>")
+	ASsnExprPreOp = ScriptNodeType("<expr pre op>")
+	ASsnExprPostOp = ScriptNodeType("<expr post op>")
+	ASsnExprOperator = ScriptNodeType("<expr operator>")
+	ASsnExprValue = ScriptNodeType("<expr value>")
+	ASsnBreak = ScriptNodeType("<break>")
+	ASsnContinue = ScriptNodeType("<continue>")
+	ASsnDoWhile = ScriptNodeType("<do-while>")
+	ASsnAssignment = ScriptNodeType("<assignment>")
+	ASsnCondition = ScriptNodeType("<condition>")
+	ASsnSwitch = ScriptNodeType("<switch>")
+	ASsnCase = ScriptNodeType("<case>")
+	ASsnImport = ScriptNodeType("<import>")
+	ASsnClass = ScriptNodeType("<class>")
+	ASsnInitList = ScriptNodeType("<init list>")
+	ASsnInterface = ScriptNodeType("<interface>")
+	ASsnEnum = ScriptNodeType("<enum>")
+	ASsnTypedef = ScriptNodeType("<type def>")
+	ASsnCast = ScriptNodeType("<cast>")
+	ASsnVariableAccess = ScriptNodeType("<var access>")
+	ASsnFuncDef = ScriptNodeType("<function definition>")
+	ASsnVirtualProperty = ScriptNodeType("<virtual property>")
+	ASsnNamespace = ScriptNodeType("<namespace>")
+	ASsnMixin = ScriptNodeType("<mixin>")
+	ASsnListPattern = ScriptNodeType("<list pattern>")
+	ASsnNamedArgument = ScriptNodeType("<named arg>")
+	ASsnScope = ScriptNodeType("<scope>")
 )
 
 type sToken struct {
@@ -106,7 +105,7 @@ func (sn *ScriptNode) ToTList() string {
 	f := sn.FirstChild
 	//fmt.Println("Going down a level -->")
 	var o string = ""
-	o = strconv.Itoa(int(sn.NodeType))
+	o = string(sn.NodeType)
 	if sn.NodeType == ASsnDataType && sn.TokenType != tokens.ASttUnrecognizedToken { o = tokens.GetDefinition(sn.TokenType)}
 	if f != nil {
 		for f != nil {
@@ -120,7 +119,7 @@ func (sn *ScriptNode) ToTList() string {
 				o += " { " + f.ToTList() + " }"
 			} else if f.Next != nil {
 				if f.Next.Next == nil {
-					o += " { " + f.ToTList() + " }"
+					o += " & { " + f.ToTList() + " }"
 					f = f.Next.Next
 					continue
 				}
