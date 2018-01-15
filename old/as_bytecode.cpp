@@ -2307,7 +2307,7 @@ void asCByteCode::DebugOutput(const char *name, asCScriptFunction *func)
 					fprintf(file, "   %-8s 0x%x          (func:%s)\n", asBCInfo[instr->op].name, (asUINT)*ARG_QW(instr->arg), f->GetDeclaration());
 				}
 				break;
-	
+
 			default:
 #ifdef __GNUC__
 #ifdef _LP64
@@ -2429,8 +2429,8 @@ void asCByteCode::DebugOutput(const char *name, asCScriptFunction *func)
 
 	fclose(file);
 
-	// If the stackSize is negative then there is something wrong with the 
-	// bytecode, i.e. there is a bug in the compiler or in the optimizer. We 
+	// If the stackSize is negative then there is something wrong with the
+	// bytecode, i.e. there is a bug in the compiler or in the optimizer. We
 	// only check this here to have the bytecode available on file for verification
 	asASSERT( !invalidStackSize );
 }
@@ -2926,4 +2926,3 @@ void asCByteInstruction::Remove()
 END_AS_NAMESPACE
 
 #endif // AS_NO_COMPILER
-

@@ -18,9 +18,10 @@ Clipsey clipseypone@gmail.com
 package angelscript
 
 import (
-	"fmt"
-	"github.com/Member1221/go-angelscript/tokenizer"
 	"errors"
+	"fmt"
+
+	"github.com/Member1221/go-angelscript/tokenizer"
 )
 
 var ex_debug = false
@@ -67,7 +68,7 @@ func (pr *Parser) Reset() {
 	pr.Node = nil
 	pr.Script = nil
 
-	pr.lastToken = &sToken{0,0,0}
+	pr.lastToken = &sToken{0, 0, 0}
 	pr.lastToken.Position = -1
 }
 
@@ -340,7 +341,7 @@ func (pr *Parser) ParseOptionalScope(script *ScriptNode) {
 	}
 
 	if t1.Type == tokens.ASttIdentifier && t2.Type == tokens.ASttLessThan {
-		pr.tempstr = pr.Script.Code[t1.Position:t1.Position+t1.Length]
+		pr.tempstr = pr.Script.Code[t1.Position : t1.Position+t1.Length]
 		if pr.Engine.IsTemplateType(pr.tempstr) {
 
 			pr.RewindTo(&t1)
@@ -497,8 +498,8 @@ func (pr *Parser) ParseType(allowConst, allowVariableType, allowAuto bool) (*Scr
 	pr.GetToken(&t)
 	pr.RewindTo(&t)
 	tr := node.LastChild
-	
-	pr.tempstr = pr.Script.Code[tr.TokenPosition:tr.TokenPosition+tr.TokenLength]
+
+	pr.tempstr = pr.Script.Code[tr.TokenPosition : tr.TokenPosition+tr.TokenLength]
 	if pr.Engine.IsTemplateType(pr.tempstr) && t.Type == tokens.ASttLessThan {
 		pr.ParseTemplTypeList(node, true)
 		if pr.IsSyntaxError {
@@ -544,7 +545,7 @@ func (pr *Parser) ParseTemplTypeList(node *ScriptNode, required bool) (bool, err
 	if t.Type != tokens.ASttLessThan {
 		if required {
 			//TODO: ERROR (expect Lessthan)
-			return false, errors.New("Expected "+tokens.GetDefinition(tokens.ASttLessThan)+", got " + tokens.GetDefinition(t.Type))
+			return false, errors.New("Expected " + tokens.GetDefinition(tokens.ASttLessThan) + ", got " + tokens.GetDefinition(t.Type))
 		}
 		return false, nil
 	}
@@ -566,7 +567,7 @@ func (pr *Parser) ParseTemplTypeList(node *ScriptNode, required bool) (bool, err
 
 	if pr.Script.Code[t.Position:1] != ">" {
 		if required {
-			return false, errors.New("Expected"+tokens.GetDefinition(tokens.ASttGreaterThan)+", got " + tokens.GetDefinition(t.Type))
+			return false, errors.New("Expected" + tokens.GetDefinition(tokens.ASttGreaterThan) + ", got " + tokens.GetDefinition(t.Type))
 		} else {
 			isValid = false
 		}
@@ -599,7 +600,7 @@ func (pr *Parser) ParseToken(token tokens.Token) (*ScriptNode, error) {
 
 	if t1.Type != token {
 		//TODO: ERROR (Expect TOKEN)
-		return nil, errors.New("Expected "+tokens.GetDefinition(token)+", got " + tokens.GetDefinition(t1.Type))
+		return nil, errors.New("Expected " + tokens.GetDefinition(token) + ", got " + tokens.GetDefinition(t1.Type))
 	}
 
 	node.SetToken(&t1)
@@ -625,7 +626,7 @@ func (pr *Parser) ParseOneOf(toks []tokens.Token) (*ScriptNode, error) {
 
 	if n == len(toks) {
 		//TODO: ERROR (Expect tokens/count, got t1)
-		return node, errors.New("Expected "+tokens.GetDefinitionOrList(toks)+", got " + tokens.GetDefinition(t1.Type))
+		return node, errors.New("Expected " + tokens.GetDefinitionOrList(toks) + ", got " + tokens.GetDefinition(t1.Type))
 	}
 
 	node.SetToken(&t1)
@@ -712,7 +713,7 @@ func (pr *Parser) ParseParameterList() (*ScriptNode, error) {
 	pr.GetToken(&t1)
 	if t1.Type != tokens.ASttOpenParanthesis {
 		//TODO: ERROR (Expected "(")
-		return nil, errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttOpenParanthesis})+", got " + tokens.GetDefinition(t1.Type)) 
+		return nil, errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttOpenParanthesis}) + ", got " + tokens.GetDefinition(t1.Type))
 	}
 
 	node.UpdateSourcePos(t1.Position, t1.Length)
@@ -770,7 +771,7 @@ func (pr *Parser) ParseParameterList() (*ScriptNode, error) {
 				continue
 			} else {
 				//TODO: Error (Expected Tokens: ")", ",")
-				return nil, errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCloseParanthesis, tokens.ASttListSeparator})+", got "+ tokens.GetDefinition(t1.Type))
+				return nil, errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCloseParanthesis, tokens.ASttListSeparator}) + ", got " + tokens.GetDefinition(t1.Type))
 			}
 		}
 	}
@@ -858,7 +859,11 @@ func (pr *Parser) GetToken(token *sToken) {
 		token.Length = pr.lastToken.Length
 		token.Position = pr.lastToken.Position
 		token.Type = pr.lastToken.Type
-		if ex_debug { if token.Type != tokens.ASttWhiteSpace { fmt.Println(tokens.GetDefinition(token.Type), "of length", token.Length, "at position", token.Position) } }	
+		if ex_debug {
+			if token.Type != tokens.ASttWhiteSpace {
+				fmt.Println(tokens.GetDefinition(token.Type), "of length", token.Length, "at position", token.Position)
+			}
+		}
 		pr.sourcePos += token.Length
 
 		if token.Type == tokens.ASttWhiteSpace ||
@@ -868,15 +873,19 @@ func (pr *Parser) GetToken(token *sToken) {
 		}
 		return
 	}
-	
+
 	if pr.sourcePos >= len(pr.Script.Code) {
 		token.Type = tokens.ASttEnd
 		token.Length = 0
 	} else {
-		l, t := pr.Engine.tok.GetToken(pr.Script.Code[pr.sourcePos:]);
+		l, t := pr.Engine.tok.GetToken(pr.Script.Code[pr.sourcePos:])
 		token.Type = t
 		token.Length = int(l)
-		if ex_debug { if token.Type != tokens.ASttWhiteSpace { fmt.Println(tokens.GetDefinition(token.Type), "of length", token.Length, "at position", token.Position) } }
+		if ex_debug {
+			if token.Type != tokens.ASttWhiteSpace {
+				fmt.Println(tokens.GetDefinition(token.Type), "of length", token.Length, "at position", token.Position)
+			}
+		}
 	}
 	token.Position = pr.sourcePos
 	pr.sourcePos += token.Length
@@ -887,10 +896,14 @@ func (pr *Parser) GetToken(token *sToken) {
 			token.Type = tokens.ASttEnd
 			token.Length = 0
 		} else {
-			l, t := pr.Engine.tok.GetToken(pr.Script.Code[pr.sourcePos:]);
+			l, t := pr.Engine.tok.GetToken(pr.Script.Code[pr.sourcePos:])
 			token.Type = t
 			token.Length = int(l)
-			if ex_debug { if token.Type != tokens.ASttWhiteSpace { fmt.Println(tokens.GetDefinition(token.Type), "of length", token.Length, "at position", token.Position) } }
+			if ex_debug {
+				if token.Type != tokens.ASttWhiteSpace {
+					fmt.Println(tokens.GetDefinition(token.Type), "of length", token.Length, "at position", token.Position)
+				}
+			}
 		}
 
 		token.Position = pr.sourcePos
@@ -900,7 +913,9 @@ func (pr *Parser) GetToken(token *sToken) {
 }
 
 func (pr *Parser) RewindTo(token *sToken) {
-	if ex_debug { fmt.Println("Rewinding to", token.Position, "with type", tokens.GetDefinition(token.Type), "of length", token.Length, "...") }
+	if ex_debug {
+		fmt.Println("Rewinding to", token.Position, "with type", tokens.GetDefinition(token.Type), "of length", token.Length, "...")
+	}
 	pr.lastToken.Position = token.Position
 	pr.lastToken.Length = token.Length
 	pr.lastToken.Type = token.Type
@@ -945,7 +960,7 @@ func (pr *Parser) IsRealType(tokenType tokens.Token) bool {
 func (pr *Parser) IsDataType(token *sToken) bool {
 	if token.Type == tokens.ASttIdentifier {
 		if pr.CheckValidTypes {
-			pr.tempstr = pr.Script.Code[token.Position:token.Position+token.Length]
+			pr.tempstr = pr.Script.Code[token.Position : token.Position+token.Length]
 			if !pr.Builder.DoesTypeExist(pr.tempstr) {
 				return false
 			}
@@ -1054,7 +1069,7 @@ func (pr *Parser) IdentifierIs(t sToken, str string) bool {
 }
 
 func (pr *Parser) CheckTemplateType(t sToken) bool {
-	pr.tempstr = pr.Script.Code[t.Position:t.Position+t.Length]
+	pr.tempstr = pr.Script.Code[t.Position : t.Position+t.Length]
 	if pr.Engine.IsTemplateType(pr.tempstr) {
 		var t1 sToken
 		pr.GetToken(&t1)
@@ -1144,7 +1159,7 @@ func (pr *Parser) ParseCast() (*ScriptNode, error) {
 
 	pr.GetToken(&t1)
 	if t1.Type != tokens.ASttOpenParanthesis {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttOpenParanthesis})+", got "+tokens.GetDefinition(t1.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttOpenParanthesis}) + ", got " + tokens.GetDefinition(t1.Type))
 		return node, nil
 	}
 
@@ -1155,7 +1170,7 @@ func (pr *Parser) ParseCast() (*ScriptNode, error) {
 
 	pr.GetToken(&t1)
 	if t1.Type != tokens.ASttCloseParanthesis {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCloseParanthesis})+", got "+tokens.GetDefinition(t1.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCloseParanthesis}) + ", got " + tokens.GetDefinition(t1.Type))
 		return node, nil
 	}
 
@@ -1206,7 +1221,7 @@ func (pr *Parser) ParseExprValue() (*ScriptNode, error) {
 			isTemplateType := false
 
 			if isDataType {
-				pr.tempstr = pr.Script.Code[t2.Position:t2.Position+t2.Length]
+				pr.tempstr = pr.Script.Code[t2.Position : t2.Position+t2.Length]
 				if pr.Engine.IsTemplateType(pr.tempstr) {
 					isTemplateType = true
 				}
@@ -1241,7 +1256,7 @@ func (pr *Parser) ParseExprValue() (*ScriptNode, error) {
 
 		pr.GetToken(&t1)
 		if t1.Type != tokens.ASttCloseParanthesis {
-			return node, errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCloseParanthesis})+", got "+tokens.GetDefinition(t1.Type))
+			return node, errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCloseParanthesis}) + ", got " + tokens.GetDefinition(t1.Type))
 		}
 
 		node.UpdateSourcePos(t1.Position, t1.Length)
@@ -1322,7 +1337,7 @@ func (pr *Parser) ParseLambda() (*ScriptNode, error) {
 
 	pr.GetToken(&t)
 	if t.Type != tokens.ASttOpenParanthesis {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttOpenParanthesis})+", got "+tokens.GetDefinition(t.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttOpenParanthesis}) + ", got " + tokens.GetDefinition(t.Type))
 		return node, nil
 	}
 
@@ -1343,7 +1358,7 @@ func (pr *Parser) ParseLambda() (*ScriptNode, error) {
 	}
 
 	if t.Type != tokens.ASttCloseParanthesis {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCloseParanthesis})+", got "+tokens.GetDefinition(t.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCloseParanthesis}) + ", got " + tokens.GetDefinition(t.Type))
 		return node, nil
 	}
 
@@ -1428,7 +1443,7 @@ func (pr *Parser) ParseArgList(withParenthesis bool) (*ScriptNode, error) {
 	if withParenthesis {
 		pr.GetToken(&t1)
 		if t1.Type != tokens.ASttOpenParanthesis {
-			errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttOpenParanthesis})+", got "+tokens.GetDefinition(t1.Type))
+			errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttOpenParanthesis}) + ", got " + tokens.GetDefinition(t1.Type))
 			return node, nil
 		}
 		node.UpdateSourcePos(t1.Position, t1.Length)
@@ -1491,7 +1506,7 @@ func (pr *Parser) ParseArgList(withParenthesis bool) (*ScriptNode, error) {
 					if t1.Type == tokens.ASttCloseParanthesis {
 						node.UpdateSourcePos(t1.Position, t1.Length)
 					} else {
-						return node, errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCloseParanthesis})+", got "+tokens.GetDefinition(t1.Type))
+						return node, errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCloseParanthesis}) + ", got " + tokens.GetDefinition(t1.Type))
 					}
 				} else {
 					pr.RewindTo(&t1)
@@ -1914,7 +1929,7 @@ func (pr *Parser) ParseImport() (*ScriptNode, error) {
 		return node, nil
 	}
 
-	pr.tempstr = pr.Script.Code[t.Position:t.Position+t.Length]
+	pr.tempstr = pr.Script.Code[t.Position : t.Position+t.Length]
 	if pr.tempstr != tokens.ASFromToken {
 		//TODO: error expected from
 		return node, nil
@@ -2562,31 +2577,45 @@ func (pr *Parser) ParseFunction(isMethod bool) (*ScriptNode, error) {
 	} else if isMethod && t1.Type == tokens.ASttProtected {
 		node.AddChildLast(pr.ParseToken(tokens.ASttProtected))
 	}
-	if pr.IsSyntaxError { return node, nil }
+	if pr.IsSyntaxError {
+		return node, nil
+	}
 
 	if !isMethod && pr.IdentifierIs(t1, tokens.ASSharedToken) {
 		node.AddChildLast(pr.ParseIdentifier())
-		if pr.IsSyntaxError { return node, nil }
+		if pr.IsSyntaxError {
+			return node, nil
+		}
 	}
 
 	if !isMethod || (t1.Type != tokens.ASttBitNot && t2.Type != tokens.ASttOpenParanthesis) {
 		node.AddChildLast(pr.ParseType(true, false, false))
-		if pr.IsSyntaxError { return node, nil }
+		if pr.IsSyntaxError {
+			return node, nil
+		}
 
 		node.AddChildLast(pr.ParseTypeMod(false))
-		if pr.IsSyntaxError { return node, nil }
+		if pr.IsSyntaxError {
+			return node, nil
+		}
 	}
 
 	if isMethod && t1.Type == tokens.ASttBitNot {
 		node.AddChildLast(pr.ParseToken(tokens.ASttBitNot))
-		if pr.IsSyntaxError { return node, nil }
+		if pr.IsSyntaxError {
+			return node, nil
+		}
 	}
 
 	node.AddChildLast(pr.ParseIdentifier())
-	if pr.IsSyntaxError { return node, nil }
+	if pr.IsSyntaxError {
+		return node, nil
+	}
 
 	node.AddChildLast(pr.ParseParameterList())
-	if pr.IsSyntaxError { return node, nil }
+	if pr.IsSyntaxError {
+		return node, nil
+	}
 
 	if isMethod {
 		pr.GetToken(&t1)
@@ -2597,7 +2626,9 @@ func (pr *Parser) ParseFunction(isMethod bool) (*ScriptNode, error) {
 		}
 
 		pr.ParseMethodOverrideBehaviors(node)
-		if pr.IsSyntaxError { return node, nil }
+		if pr.IsSyntaxError {
+			return node, nil
+		}
 	}
 
 	node.AddChildLast(pr.SuperficiallyParseStatementBlock())
@@ -2640,7 +2671,7 @@ func (pr *Parser) ParseInterfaceMethod() (*ScriptNode, error) {
 
 	pr.GetToken(&t1)
 	if t1.Type != tokens.ASttEndStatement {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttEndStatement})+", got "+tokens.GetDefinition(t1.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttEndStatement}) + ", got " + tokens.GetDefinition(t1.Type))
 		return node, nil
 	}
 
@@ -2686,7 +2717,7 @@ func (pr *Parser) ParseVirtualPropertyDecl(isMethod, isInterface bool) (*ScriptN
 
 	pr.GetToken(&t1)
 	if t1.Type != tokens.ASttStartStatementBlock {
-		return nil, errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttStartStatementBlock})+", got "+tokens.GetDefinition(t1.Type))
+		return nil, errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttStartStatementBlock}) + ", got " + tokens.GetDefinition(t1.Type))
 		return node, nil
 	}
 
@@ -2729,12 +2760,12 @@ func (pr *Parser) ParseVirtualPropertyDecl(isMethod, isInterface bool) (*ScriptN
 						return node, nil
 					}
 				} else if t1.Type != tokens.ASttEndStatement {
-					return node, errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttEndStatement, tokens.ASttOpenBracket})+", got "+tokens.GetDefinition(t1.Type))
+					return node, errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttEndStatement, tokens.ASttOpenBracket}) + ", got " + tokens.GetDefinition(t1.Type))
 				}
 			} else {
 				pr.GetToken(&t1)
 				if t1.Type != tokens.ASttEndStatement {
-					return node, errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttEndStatement})+", got "+tokens.GetDefinition(t1.Type))
+					return node, errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttEndStatement}) + ", got " + tokens.GetDefinition(t1.Type))
 				}
 			}
 		} else if t1.Type == tokens.ASttEndStatementBlock {
@@ -2758,7 +2789,7 @@ func (pr *Parser) ParseInterface() (*ScriptNode, error) {
 	pr.GetToken(&t)
 
 	if t.Type == tokens.ASttIdentifier {
-		pr.tempstr = pr.Script.Code[t.Position:t.Position+t.Length]
+		pr.tempstr = pr.Script.Code[t.Position : t.Position+t.Length]
 		if pr.tempstr != tokens.ASSharedToken {
 			//TODO: error expected shared_token
 			return node, nil
@@ -2795,7 +2826,7 @@ func (pr *Parser) ParseInterface() (*ScriptNode, error) {
 	}
 
 	if t.Type != tokens.ASttStartStatementBlock {
-		return nil, errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttStartStatementBlock})+", got "+tokens.GetDefinition(t.Type))
+		return nil, errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttStartStatementBlock}) + ", got " + tokens.GetDefinition(t.Type))
 		return node, nil
 	}
 
@@ -2866,7 +2897,7 @@ func (pr *Parser) ParseClass() (*ScriptNode, error) {
 	}
 
 	if t.Type != tokens.ASttClass {
-		return node, errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttClass})+", got "+tokens.GetDefinition(t.Type))
+		return node, errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttClass}) + ", got " + tokens.GetDefinition(t.Type))
 	}
 
 	node.SetToken(&t)
@@ -2903,7 +2934,7 @@ func (pr *Parser) ParseClass() (*ScriptNode, error) {
 	}
 
 	if t.Type != tokens.ASttStartStatementBlock {
-		return nil, errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttStartStatementBlock})+", got "+tokens.GetDefinition(t.Type))
+		return nil, errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttStartStatementBlock}) + ", got " + tokens.GetDefinition(t.Type))
 	}
 
 	pr.GetToken(&t)
@@ -3012,7 +3043,7 @@ func (pr *Parser) SuperficiallyParseStatementBlock() (*ScriptNode, error) {
 
 	pr.GetToken(&t)
 	if t.Type != tokens.ASttStartStatementBlock {
-		return nil, errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttStartStatementBlock})+", got "+tokens.GetDefinition(t.Type))
+		return nil, errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttStartStatementBlock}) + ", got " + tokens.GetDefinition(t.Type))
 		return node, nil
 	}
 
@@ -3049,7 +3080,7 @@ func (pr *Parser) ParseStatementBlock() (*ScriptNode, error) {
 
 	pr.GetToken(&t1)
 	if t1.Type != tokens.ASttStartStatementBlock {
-		return nil, errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttStartStatementBlock})+", got "+tokens.GetDefinition(t1.Type))
+		return nil, errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttStartStatementBlock}) + ", got " + tokens.GetDefinition(t1.Type))
 		return node, nil
 	}
 
@@ -3113,7 +3144,7 @@ func (pr *Parser) ParseInitList() (*ScriptNode, error) {
 	var t1 sToken
 	pr.GetToken(&t1)
 	if t1.Type != tokens.ASttStartStatementBlock {
-		return nil, errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttStartStatementBlock})+", got "+tokens.GetDefinition(t1.Type))
+		return nil, errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttStartStatementBlock}) + ", got " + tokens.GetDefinition(t1.Type))
 		return node, nil
 	}
 
@@ -3204,11 +3235,15 @@ func (pr *Parser) ParseDeclaration(isClassProp bool, isGlobal bool) (*ScriptNode
 	}
 
 	node.AddChildLast(pr.ParseType(true, false, !isClassProp))
-	if pr.IsSyntaxError { return node, nil }
+	if pr.IsSyntaxError {
+		return node, nil
+	}
 
 	for {
 		node.AddChildLast(pr.ParseIdentifier())
-		if pr.IsSyntaxError { return node, nil }
+		if pr.IsSyntaxError {
+			return node, nil
+		}
 
 		if isClassProp || isGlobal {
 			pr.GetToken(&t)
@@ -3255,7 +3290,7 @@ func (pr *Parser) ParseDeclaration(isClassProp bool, isGlobal bool) (*ScriptNode
 			return node, nil
 		} else {
 			//TODO: error expected , or ;
-			return node, errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttListSeparator, tokens.ASttEndStatement})+" got "+tokens.GetDefinition(t.Type))
+			return node, errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttListSeparator, tokens.ASttEndStatement}) + " got " + tokens.GetDefinition(t.Type))
 		}
 	}
 	return node, nil
@@ -3313,7 +3348,7 @@ func (pr *Parser) ParseExpressionStatement() (*ScriptNode, error) {
 
 	pr.GetToken(&t)
 	if t.Type != tokens.ASttEndStatement {
-		return node, errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttEndStatement})+", got "+tokens.GetDefinition(t.Type))
+		return node, errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttEndStatement}) + ", got " + tokens.GetDefinition(t.Type))
 	}
 
 	node.UpdateSourcePos(t.Position, t.Length)
@@ -3337,7 +3372,7 @@ func (pr *Parser) ParseSwitch() (*ScriptNode, error) {
 
 	pr.GetToken(&t)
 	if t.Type != tokens.ASttOpenParanthesis {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttOpenParanthesis})+", got "+tokens.GetDefinition(t.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttOpenParanthesis}) + ", got " + tokens.GetDefinition(t.Type))
 		return node, nil
 	}
 
@@ -3348,13 +3383,13 @@ func (pr *Parser) ParseSwitch() (*ScriptNode, error) {
 
 	pr.GetToken(&t)
 	if t.Type != tokens.ASttCloseParanthesis {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCloseParanthesis})+", got "+tokens.GetDefinition(t.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCloseParanthesis}) + ", got " + tokens.GetDefinition(t.Type))
 		return node, nil
 	}
 
 	pr.GetToken(&t)
 	if t.Type != tokens.ASttStartStatementBlock {
-		return nil, errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttStartStatementBlock})+", got "+tokens.GetDefinition(t.Type))
+		return nil, errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttStartStatementBlock}) + ", got " + tokens.GetDefinition(t.Type))
 		return node, nil
 	}
 
@@ -3367,7 +3402,7 @@ func (pr *Parser) ParseSwitch() (*ScriptNode, error) {
 		pr.RewindTo(&t)
 
 		if t.Type != tokens.ASttCase && t.Type != tokens.ASttDefault {
-			return nil, errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCase, tokens.ASttDefault})+", got "+tokens.GetDefinition(t.Type))
+			return nil, errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCase, tokens.ASttDefault}) + ", got " + tokens.GetDefinition(t.Type))
 			return node, nil
 		}
 
@@ -3393,7 +3428,7 @@ func (pr *Parser) ParseCase() (*ScriptNode, error) {
 	var t sToken
 	pr.GetToken(&t)
 	if t.Type != tokens.ASttCase && t.Type != tokens.ASttDefault {
-		return nil, errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCase, tokens.ASttDefault})+", got "+tokens.GetDefinition(t.Type))
+		return nil, errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCase, tokens.ASttDefault}) + ", got " + tokens.GetDefinition(t.Type))
 		return node, nil
 	}
 
@@ -3448,7 +3483,7 @@ func (pr *Parser) ParseIf() (*ScriptNode, error) {
 
 	pr.GetToken(&t)
 	if t.Type != tokens.ASttOpenParanthesis {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttOpenParanthesis})+", got "+tokens.GetDefinition(t.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttOpenParanthesis}) + ", got " + tokens.GetDefinition(t.Type))
 		return node, nil
 	}
 
@@ -3459,7 +3494,7 @@ func (pr *Parser) ParseIf() (*ScriptNode, error) {
 
 	pr.GetToken(&t)
 	if t.Type != tokens.ASttCloseParanthesis {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCloseParanthesis})+", got "+tokens.GetDefinition(t.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCloseParanthesis}) + ", got " + tokens.GetDefinition(t.Type))
 		return node, nil
 	}
 
@@ -3496,7 +3531,7 @@ func (pr *Parser) ParseFor() (*ScriptNode, error) {
 
 	pr.GetToken(&t)
 	if t.Type != tokens.ASttOpenParanthesis {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttOpenParanthesis})+", got "+tokens.GetDefinition(t.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttOpenParanthesis}) + ", got " + tokens.GetDefinition(t.Type))
 		return node, nil
 	}
 
@@ -3563,7 +3598,7 @@ func (pr *Parser) ParseWhile() (*ScriptNode, error) {
 
 	pr.GetToken(&t)
 	if t.Type != tokens.ASttOpenParanthesis {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttOpenParanthesis})+", got "+tokens.GetDefinition(t.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttOpenParanthesis}) + ", got " + tokens.GetDefinition(t.Type))
 		return node, nil
 	}
 
@@ -3574,7 +3609,7 @@ func (pr *Parser) ParseWhile() (*ScriptNode, error) {
 
 	pr.GetToken(&t)
 	if t.Type != tokens.ASttCloseParanthesis {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCloseParanthesis})+", got "+tokens.GetDefinition(t.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCloseParanthesis}) + ", got " + tokens.GetDefinition(t.Type))
 		return node, nil
 	}
 
@@ -3611,7 +3646,7 @@ func (pr *Parser) ParseDoWhile() (*ScriptNode, error) {
 
 	pr.GetToken(&t)
 	if t.Type != tokens.ASttOpenParanthesis {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttOpenParanthesis})+", got "+tokens.GetDefinition(t.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttOpenParanthesis}) + ", got " + tokens.GetDefinition(t.Type))
 		return node, nil
 	}
 
@@ -3622,13 +3657,13 @@ func (pr *Parser) ParseDoWhile() (*ScriptNode, error) {
 
 	pr.GetToken(&t)
 	if t.Type != tokens.ASttCloseParanthesis {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCloseParanthesis})+", got "+tokens.GetDefinition(t.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttCloseParanthesis}) + ", got " + tokens.GetDefinition(t.Type))
 		return node, nil
 	}
 
 	pr.GetToken(&t)
 	if t.Type != tokens.ASttEndStatement {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttEndStatement})+", got "+tokens.GetDefinition(t.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttEndStatement}) + ", got " + tokens.GetDefinition(t.Type))
 		return node, nil
 	}
 
@@ -3667,7 +3702,7 @@ func (pr *Parser) ParseReturn() (*ScriptNode, error) {
 
 	pr.GetToken(&t)
 	if t.Type != tokens.ASttEndStatement {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttEndStatement})+", got "+tokens.GetDefinition(t.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttEndStatement}) + ", got " + tokens.GetDefinition(t.Type))
 		return node, nil
 	}
 
@@ -3684,7 +3719,7 @@ func (pr *Parser) ParseBreak() (*ScriptNode, error) {
 	var t sToken
 	pr.GetToken(&t)
 	if t.Type != tokens.ASttBreak {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttBreak})+", got "+tokens.GetDefinition(t.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttBreak}) + ", got " + tokens.GetDefinition(t.Type))
 		return node, nil
 	}
 
@@ -3692,7 +3727,7 @@ func (pr *Parser) ParseBreak() (*ScriptNode, error) {
 
 	pr.GetToken(&t)
 	if t.Type != tokens.ASttEndStatement {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttEndStatement})+", got "+tokens.GetDefinition(t.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttEndStatement}) + ", got " + tokens.GetDefinition(t.Type))
 	}
 
 	node.UpdateSourcePos(t.Position, t.Length)
@@ -3708,7 +3743,7 @@ func (pr *Parser) ParseContinue() (*ScriptNode, error) {
 	var t sToken
 	pr.GetToken(&t)
 	if t.Type != tokens.ASttContinue {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttContinue})+", got "+tokens.GetDefinition(t.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttContinue}) + ", got " + tokens.GetDefinition(t.Type))
 		return node, nil
 	}
 
@@ -3733,7 +3768,7 @@ func (pr *Parser) ParseTypedef() (*ScriptNode, error) {
 
 	pr.GetToken(&token)
 	if token.Type != tokens.ASttTypedef {
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttTypedef})+", got "+tokens.GetDefinition(token.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttTypedef}) + ", got " + tokens.GetDefinition(token.Type))
 		return node, nil
 	}
 
@@ -3744,7 +3779,7 @@ func (pr *Parser) ParseTypedef() (*ScriptNode, error) {
 	pr.RewindTo(&token)
 
 	if !pr.IsRealType(token.Type) || token.Type == tokens.ASttVoid {
-		errors.New("Unexpected token: "+tokens.GetDefinition(token.Type))
+		errors.New("Unexpected token: " + tokens.GetDefinition(token.Type))
 		return node, nil
 	}
 
@@ -3754,7 +3789,7 @@ func (pr *Parser) ParseTypedef() (*ScriptNode, error) {
 	pr.GetToken(&token)
 	if token.Type != tokens.ASttEndStatement {
 		pr.RewindTo(&token)
-		errors.New("Expected "+tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttEndStatement})+", got "+tokens.GetDefinition(token.Type))
+		errors.New("Expected " + tokens.GetDefinitionOrList([]tokens.Token{tokens.ASttEndStatement}) + ", got " + tokens.GetDefinition(token.Type))
 	}
 
 	return node, nil

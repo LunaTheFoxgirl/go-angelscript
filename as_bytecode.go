@@ -7,6 +7,31 @@ import (
 // InstructionType is the type of an bytecode instruction.
 type InstructionType byte
 
+// Instruction type sizes
+var ASBCTypeSize [21]int = [21]int{
+	0, // asBCTYPE_INFO
+	1, // asBCTYPE_NO_ARG
+	1, // asBCTYPE_W_ARG
+	1, // asBCTYPE_wW_ARG
+	2, // asBCTYPE_DW_ARG
+	2, // asBCTYPE_rW_DW_ARG
+	3, // asBCTYPE_QW_ARG
+	3, // asBCTYPE_DW_DW_ARG
+	2, // asBCTYPE_wW_rW_rW_ARG
+	3, // asBCTYPE_wW_QW_ARG
+	2, // asBCTYPE_wW_rW_ARG
+	1, // asBCTYPE_rW_ARG
+	2, // asBCTYPE_wW_DW_ARG
+	3, // asBCTYPE_wW_rW_DW_ARG
+	2, // asBCTYPE_rW_rW_ARG
+	2, // asBCTYPE_wW_W_ARG
+	4, // asBCTYPE_QW_DW_ARG
+	3, // asBCTYPE_rW_QW_ARG
+	2, // asBCTYPE_W_DW_ARG
+	3, // asBCTYPE_rW_W_DW_ARG
+	3, // asBCTYPE_rW_DW_DW_ARG
+}
+
 const (
 	ASBCTYPE_INFO = InstructionType(iota)
 	ASBCTYPE_NO_ARG
@@ -662,6 +687,14 @@ type ByteCode struct {
 	tempVars []int
 }
 
+func (bc *ByteCode) TempVarsExists(item int) bool {
+	for _, i := range bc.tempVars {
+		if i == item {
+			return true
+		}
+	}
+}
+
 // NewBytecode creates a new bytecode instance.
 func NewBytecode(engine *ScriptEngine) ByteCode {
 	return ByteCode{first: nil, last: nil, LargestStack: -1, tempVars: make([]int, 0), engine: engine}
@@ -808,8 +841,6 @@ func (bc *ByteCode) ExchangeVar(oldoffset, newoffset int) {
 			if curr.WArg[1] == oldoffset {
 				curr.WArg[1] = newoffset
 			}
-		} else if curr.OPCode == ASBC_LoadThisR {
-			bc.InsertIfNotExists(vars, curr.WArg[0])
 		}
 
 		curr = curr.Next
@@ -818,12 +849,467 @@ func (bc *ByteCode) ExchangeVar(oldoffset, newoffset int) {
 
 func (bc *ByteCode) AddPath(paths []ByteInstruction, instr ByteInstruction, stackSize int) {
 	if instr.Marked {
-		if instr.stackSize == stackSize {
-			panic("instruction stack size same as stack size!")
-		} else {
-			instr.Marked = true
-			instr.stackSize = stackSize
-			paths = append(paths, instr)
+		if instr.stackSize != stackSize {
+			panic("Instruction stack size invalid!")
+		}
+		instr.Marked = true
+		instr.stackSize = stackSize
+		paths = append(paths, instr)
+	}
+}
+
+func (bc *ByteCode) ChangeFirstDeleteNext(curr *ByteInstruction, next ByteCodeInstruction) *ByteInstruction {
+	curr.OPCode = next
+	if curr.Next != nil {
+		curr.DeleteInstruction(curr.Next)
+	}
+
+	if curr.Previous != nil {
+		return curr.Previous
+	}
+	return curr
+}
+
+func (bc *ByteCode) DeleteFirstChangeNext(curr *ByteInstruction, next ByteCodeInstruction) *ByteInstruction {
+	if curr.Next == nil {
+		panic("curr.Next was nil!")
+	}
+	instr := curr.Next
+	instr.OPCode = next
+
+	if instr.Previous != nil {
+		return instr.Previous
+	}
+	return instr
+}
+
+func (bc *ByteCode) InsertBefore(before *ByteInstruction, instr *ByteInstruction) {
+	if instr.Next != nil {
+		panic("instruction is already in a bytecode context!")
+	}
+	if instr.Previous != nil {
+		panic("instruction is already in a bytecode context!")
+	}
+
+	if before.Previous != nil {
+		before.Previous.Next = instr
+	}
+	instr.Previous = before.Previous
+	before.Previous = instr
+	instr.Next = before
+
+	if bc.first == before {
+		first = instr
+	}
+}
+
+func (bc *ByteCode) RemoveInstruction(instr *ByteInstruction) {
+	if instr == bc.first {
+		bc.first = bc.first.Next
+	}
+	if instr == bc.last {
+		bc.last = bc.last.Previous
+	}
+
+	if instr.Previous != nil {
+		instr.Previous.Next = instr.Next
+	}
+	if instr.Next != nil {
+		instr.Next.Previous = instr.Previous
+	}
+
+	instr.Next = nil
+	instr.Previous = nil
+}
+
+func (bc *ByteCode) CanBeSwapped(instr *ByteInstruction) bool {
+	if instr.OPCode != ASBC_SwapPtr {
+		panic("Pointer was not swap")
+	}
+
+	if instr.Previous != nil || instr.Previous.Previous != nil {
+		return false
+	}
+
+	b := instr.Previous
+	a := b.Previous
+
+	if a.OPCode != ASBC_PshNull && a.OPCode != ASBC_PshVPtr && a.OPCode != ASBC_PSF {
+		return false
+	}
+	if b.OPCode != ASBC_PshNull && b.OPCode != ASBC_PshVPtr && b.OPCode != ASBC_PSF {
+		return false
+	}
+
+	return true
+}
+
+func (bc *ByteCode) GoBack(instr *ByteInstruction) *ByteInstruction {
+	if instr == nil {
+		return nil
+	}
+	if instr.Previous != nil {
+		instr = instr.Previous
+	}
+	if instr.Previous != nil {
+		instr = instr.Previous
+	}
+
+	return instr
+}
+
+func (bc *ByteCode) GoForward(instr *ByteInstruction) *ByteInstruction {
+	if instr == nil {
+		return nil
+	}
+	if instr.Next != nil {
+		instr = instr.Next
+	}
+	if instr.Next != nil {
+		instr = instr.Next
+	}
+
+	return instr
+}
+
+func (bc *ByteCode) PostponeInitOfTemp(curr *ByteInstruction, next **ByteInstruction) bool {
+	if curr.OPCode != ASBC_SetV4 && curr.OPCode != ASBC_SetV8 || !bc.IsTemporary(curr.WArg[0]) {
+		return false
+	}
+
+	use := curr.Next
+	for use != nil {
+
+		if bc.IsTempVarReadByInstr(use, curr.WArg[0]) {
+			break
+		}
+
+		if bc.IsTempVarOverwrittenByInstr(use, curr.WArg[0]) {
+			return false
+		}
+
+		if bc.IsInstrJmpOrLabel(usr) {
+			return false
+		}
+
+		use = use.Next
+	}
+
+	if use != nil && use.Previous != curr {
+		orig := curr.Next
+
+		bc.RemoveInstruction(curr)
+		bc.InsertBefore(use, curr)
+
+		if bc.RemoveUnusedValue(curr, 0) {
+			*next = orig
+			return true
+		}
+
+		bc.RemoveInstruction(curr)
+		bc.InsertBefore(orig, curr)
+	}
+
+	return false
+}
+
+func (bc *ByteCode) RemoveUnusedValue(curr *ByteInstruction, next **ByteInstruction) bool {
+	var dummy *ByteInstruction
+	if next == nil {
+		next = &dummy
+	}
+
+	if curr.OPCode != ASBC_FREE &&
+		(ASBCInfo[curr.OPCode].Type == ASBCTYPE_wW_rW_rW_ARG ||
+			ASBCInfo[curr.OPCode].Type == ASBCTYPE_wW_rW_ARG ||
+			ASBCInfo[curr.OPCode].Type == ASBCTYPE_wW_rW_DW_ARG ||
+			ASBCInfo[curr.OPCode].Type == ASBCTYPE_wW_ARG ||
+			ASBCInfo[curr.OPCode].Type == ASBCTYPE_wW_DW_ARG ||
+			ASBCInfo[curr.OPCode].Type == ASBCTYPE_wW_QW_ARG) &&
+		bc.IsTemporary(curr.WArg[0]) && !bc.IsTempVarRead(curr, curr.WArg[0]) {
+		if curr.OPCode == ASBC_LdGRdR4 && bc.IsTempRegUsed(curr) {
+			curr.OPCode = ASBC_LDG
+			*next = bc.GoForward(curr)
+			return true
+		}
+		*next = bc.GoForward(bc.DeleteInstruction(curr))
+		return true
+	}
+
+	if curr.OPCode == ASBC_SetV4 && curr.Next != nil {
+		if (curr.Next.OPCode == ASBC_CMPi ||
+			curr.Next.OPCode == ASBC_CMPf ||
+			curr.Next.OPCode == ASBC_CMPu) &&
+			curr.WArg[0] == curr.Next.WArg[1] && bc.IsTemporary(curr.WArg[0]) && !bc.IsTempVarRead(curr.Next, curr.WArg[0]) {
+			if curr.Next.OPCode == ASBC_CMPi {
+				curr.Next.OPCode = ASBC_CMPIi
+			}
+			if curr.Next.OPCode == ASBC_CMPf {
+				curr.Next.OPCode = ASBC_CMPIf
+			}
+			if curr.Next.OPCode == ASBC_CMPu {
+				curr.Next.OPCode = ASBC_CMPIu
+			}
+			curr.Next.size = ASBCTypeSize[ASBCInfo[ASBC_CMPIi].Type]
+			curr.Next.Arg = curr.Arg
+			*next = bc.GoForward(bc.DeleteInstruction(curr))
+			return true
+		}
+
+		if (curr.Next.OPCode == ASBC_ADDi ||
+			curr.Next.OPCode == ASBC_SUBi ||
+			curr.Next.OPCode == ASBC_MULi ||
+			curr.Next.OPCode == ASBC_ADDf ||
+			curr.Next.OPCode == ASBC_SUBf ||
+			curr.Next.OPCode == ASBC_MULf) &&
+			curr.WArg[0] == curr.Next.WArg[2] && (curr.Next.WArg[0] == curr.WArg[0] || (bc.IsTemporary(curr.WArg[0]) && !bc.IsTempVarRead(curr.Next, curr.WArg[0]))) {
+			if curr.Next.OPCode == ASBC_ADDi {
+				curr.Next.OPCode = ASBC_ADDIi
+			}
+			if curr.Next.OPCode == ASBC_SUBi {
+				curr.Next.OPCode = ASBC_SUBIi
+			}
+			if curr.Next.OPCode == ASBC_MULi {
+				curr.Next.OPCode = ASBC_MULIi
+			}
+			if curr.Next.OPCode == ASBC_ADDf {
+				curr.Next.OPCode = ASBC_ADDIf
+			}
+			if curr.Next.OPCode == ASBC_SUBf {
+				curr.Next.OPCode = ASBC_SUBIf
+			}
+			if curr.Next.OPCode == ASBC_MULf {
+				curr.Next.OPCode = ASBC_MULIf
+			}
+			curr.Next.size = ASBCTypeSize[ASBCInfo[ASBC_ADDIi].Type]
+			curr.Next.Arg = curr.Arg
+			*next = bc.GoForward(bc.DeleteInstruction(curr))
+			return true
+		}
+
+		if (curr.Next.OPCode == ASBC_ADDi ||
+			curr.Next.OPCode == ASBC_MULi ||
+			curr.Next.OPCode == ASBC_ADDf ||
+			curr.Next.OPCode == ASBC_MULf) &&
+			curr.WArg[0] == curr.Next.WArg[2] && (curr.Next.WArg[0] == curr.WArg[0] || (bc.IsTemporary(curr.WArg[0]) && !bc.IsTempVarRead(curr.Next, curr.WArg[0]))) {
+			if curr.Next.OPCode == ASBC_ADDi {
+				curr.Next.OPCode = ASBC_ADDIi
+			}
+			if curr.Next.OPCode == ASBC_MULi {
+				curr.Next.OPCode = ASBC_SUBIi
+			}
+			if curr.Next.OPCode == ASBC_ADDf {
+				curr.Next.OPCode = ASBC_ADDIf
+			}
+			if curr.Next.OPCode == ASBC_MULf {
+				curr.Next.OPCode = ASBC_SUBIf
+			}
+			curr.Next.size = ASBCTypeSize[ASBCInfo[ASBC_ADDIi].Type]
+			curr.Next.Arg = curr.Arg
+
+			curr.Next.WArg[1] = curr.Next.WArg[2]
+			*next = bc.GoForward(bc.DeleteInstruction(curr))
+			return true
+		}
+
+		// The constant value is immediately moved to another variable and then not used again
+		if curr.Next.OPCode == ASBC_CpyVtoV4 &&
+			curr.WArg[0] == curr.Next.WArg[1] &&
+			bc.IsTemporary(curr.WArg[0]) &&
+			!bc.IsTempVarRead(curr.Next, curr.WArg[0]) {
+			curr.WArg[0] = curr.Next.WArg[0]
+			*next = bc.GoForward(bc.DeleteInstruction(curr.Next))
+			return true
+		}
+
+		// The constant is copied to a temp and then immediately pushed on the stack
+		if curr.Next.OPCode == ASBC_PshV4 &&
+			curr.WArg[0] == curr.Next.WArg[0] &&
+			bc.IsTemporary(curr.WArg[0]) &&
+			!bc.IsTempVarRead(curr.Next, curr.WArg[0]) {
+			curr.OPCode = ASBC_PshC4
+			curr.stackInc = ASBCInfo[ASBC_PshC4].StackIncrement
+			*next = bc.GoForward(bc.DeleteInstruction(curr.Next))
+			return true
+		}
+
+		// The constant is copied to a global variable and then never used again
+		if curr.Next.OPCode == ASBC_CpyVtoG4 &&
+			curr.WArg[0] == curr.Next.WArg[0] &&
+			bc.IsTemporary(curr.WArg[0]) &&
+			!bc.IsTempVarRead(curr.Next, curr.WArg[0]) {
+			curr.OPCode = ASBC_SetG4
+			curr.size = ASBCTypeSize[ASBCInfo[ASBC_SetG4].Type]
+			curr.Arg = curr.Next.Arg
+			*next = bc.GoForward(bc.DeleteInstruction(curr.Next))
+			return true
+		}
+	}
+
+	// The value is immediately moved to another variable and then not used again
+	if (ASBCInfo[curr.OPCode].Type == ASBCTYPE_wW_rW_rW_ARG ||
+		ASBCInfo[curr.OPCode].Type == ASBCTYPE_wW_rW_DW_ARG) &&
+		curr.Next != nil &&
+		curr.Next.OPCode == ASBC_CpyVtoV4 &&
+		curr.WArg[0] == curr.Next.WArg[1] &&
+		bc.IsTemporary(curr.WArg[0]) &&
+		!bc.IsTempVarRead(curr.Next, curr.WArg[0]) {
+		curr.WArg[0] = curr.Next.WArg[0]
+		*next = bc.GoForward(bc.DeleteInstruction(curr.Next))
+		return true
+	}
+
+	// The register is copied to a temp variable and then back to the register again without being used afterwards
+	if curr.OPCode == ASBC_CpyRtoV4 && curr.Next != nil && curr.Next.OPCode == ASBC_CpyVtoR4 &&
+		curr.WArg[0] == curr.Next.WArg[0] &&
+		bc.IsTemporary(curr.WArg[0]) &&
+		!bc.IsTempVarRead(curr.Next, curr.WArg[0]) {
+		bc.DeleteInstruction(curr.Next)
+		*next = bc.GoForward(bc.DeleteInstruction(curr))
+		return true
+	}
+
+	// The global value is copied to a temp and then immediately pushed on the stack
+	if curr.OPCode == ASBC_CpyGtoV4 && curr.Next != nil && curr.Next.OPCode == ASBC_PshV4 &&
+		curr.WArg[0] == curr.Next.WArg[0] &&
+		bc.IsTemporary(curr.WArg[0]) &&
+		!bc.IsTempVarRead(curr.Next, curr.WArg[0]) {
+		curr.OPCode = ASBC_PshG4
+		curr.size = ASBCTypeSize[ASBCInfo[ASBC_PshG4].Type]
+		curr.stackInc = ASBCInfo[ASBC_PshG4].StackIncrement
+		*next = bc.GoForward(bc.DeleteInstruction(curr.Next))
+		return true
+	}
+
+	// The constant is assigned to a variable, then the value of the variable
+	// pushed on the stack, and then the variable is never used again
+	if curr.OPCode == ASBC_SetV8 && curr.Next != nil && curr.Next.OPCode == ASBC_PshV8 &&
+		curr.WArg[0] == curr.Next.WArg[0] &&
+		bc.IsTemporary(curr.WArg[0]) &&
+		!bc.IsTempVarRead(curr.Next, curr.WArg[0]) {
+		curr.OPCode = ASBC_PshC8
+		curr.stackInc = ASBCInfo[ASBC_PshC8].StackIncrement
+		*next = bc.GoForward(bc.DeleteInstruction(curr.Next))
+		return true
+	}
+
+	return false
+}
+
+func (bc *ByteCode) IsTemporary(offset int) bool {
+	return bc.TempVarsExists(offset)
+}
+
+func (bc *ByteCode) OptimizeLocally(tempVarOffsets []int) {
+	bc.tempVars = tempVarOffsets
+
+	instr := bc.last
+	for instr != nil {
+		curr := instr
+		instr = instr.Previous
+
+		// Remove instructions when the result is not used anywhere
+		// This will return true if the instruction is deleted, and
+		// false if it is not deleted. Observe that the instruction
+		// can be modified.
+		if bc.RemoveUnusedValue(curr, &instr) {
+			continue
+		}
+
+		// Postpone initializations so that they may be combined in the second pass.
+		// If the initialization is postponed, then the optimizations should continue
+		// from where the value was used, so instr will be updated to point to that.
+		if bc.PostponeInitOfTemp(curr, &instr) {
+			continue
+		}
+
+		currOp := curr.OPCode
+		if currOp == ASBC_SwapPtr {
+			if bc.CanBeSwapped(curr) {
+				bc.DeleteInstruction(curr)
+
+				a := instr.Previous
+				bc.RemoveInstruction(instr)
+				bc.InsertBefore(a, instr)
+
+				instr = bc.GoForward(a)
+				continue
+			}
+		} else if currOp == ASBC_ClrHi {
+			if instr != nil &&
+				(instr.OPCode == ASBC_TZ ||
+					instr.OPCode == ASBC_TNZ ||
+					instr.OPCode == ASBC_TS ||
+					instr.OPCode == ASBC_TNS ||
+					instr.OPCode == ASBC_TP ||
+					instr.OPCode == ASBC_TNP) {
+				instr = bc.GoForward(bc.DeleteInstruction(curr))
+				continue
+			}
+
+			if curr.Next != nil && curr.Next.OPCode == ASBC_JZ {
+				curr.Next.OPCode = ASBC_JLowZ
+				instr = bc.GoForward(bc.DeleteInstruction(curr))
+				continue
+			}
+
+			if curr.Next != nil && curr.Next.OPCode == ASBC_JNZ {
+				curr.Next.OPCode = ASBC_JLowNZ
+				instr = bc.GoForward(bc.DeleteInstruction(curr))
+				continue
+			}
+		} else if currOp == ASBC_LDV && curr.Next != nil {
+			if curr.Next.OPCode == ASBC_INCi && !bc.isTempRegUsed(curr.Next) {
+				curr.OPCode = ASBC_IncVi
+				bc.DeleteInstruction(curr.Next)
+				instr = bc.GoForward(curr)
+			}
+
+			if curr.Next.OPCode == ASBC_DECi && !bc.isTempRegUsed(curr.Next) {
+				curr.OPCode = ASBC_DecVi
+				bc.DeleteInstruction(curr.Next)
+				instr = bc.GoForward(curr)
+			}
+		} else if currOp == ASBC_LDG && curr.Next != nil {
+			if curr.Next.OPCode == ASBC_WRTV4 && !bc.IsTempRegUsed(curr.Next) {
+				curr.OPCode = ASBC_CpyVtoG4
+				curr.size = ASBCTypeSize[ASBCInfo[ASBC_CpyVtoG4].Type]
+				curr.WArg[0] = curr.Next.WArg[0]
+				bc.DeleteInstruction(curr.Next)
+				instr = bc.GoForward(curr)
+			}
+
+			else if curr.Next.OPCode == ASBC_RDR4 {
+				if !bc.IsTempRegUsed(curr.Next) {
+					curr.OPCode = ASBC_CpyGtoV4
+				} else {
+					curr.OPCode = ASBC_LdGRdR4
+				}
+				curr.size = ASBCTypeSize[ASBCInfo[ASBC_CpyGtoV4].Type]
+				curr.WArg[0] = curr.Next.WArg[0]
+				bc.DeleteInstruction(curr.Next)
+				instr = bc.GoForward(curr)
+			}
+		} else if currOp == ASBC_CHKREF {
+
 		}
 	}
 }
+
+
+func (bc *ByteCode) DeleteInstruction(instr *ByteInstruction) *ByteInstruction {
+	if instr == nil { return nil }
+	ret := instr.Previous
+	if instr.Previous == nil {
+		ret = instr.Next
+	}
+	bc.RemoveInstruction(instr)
+
+	return ret
+}
+
+/*
+func (bc *ByteCode) () {
+
+}
+*/
